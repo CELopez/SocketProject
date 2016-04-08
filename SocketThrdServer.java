@@ -154,6 +154,16 @@ class ClientWorker implements Runnable
         //double check name is NOT known
         //create new clients 
 
+    //check to see if client selected Other User (if recieved value == index)
+    //if Other User, prompt for Other User name
+        //double check name is NOT known
+        //create new clients 
+
+    //check to see if client selected Other User (if recieved value == index)
+    //if Other User, prompt for Other User name
+        //double check name is NOT known
+        //create new clients 
+
     public void sendMessageToAllConnectedUsers()
     {
 
