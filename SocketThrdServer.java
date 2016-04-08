@@ -1,4 +1,20 @@
+<<<<<<< HEAD
 import com.sun.deploy.util.SessionState;
+=======
+//TEST COMEMENT CHRIS HI OKAY BYE CHRIS
+//The server will: 
+// 1) Accept a port number as a command line argument.
+// 2) Accept connections from clients.
+// 3) Create a new thread for each client.
+// 4) Store messages sent to each user. //max of 10 messages per user, so String[10] //max lentgh of messages is 80 characters   //remove messages from server when client gets them
+// 5) End by termination with control-C.
+
+//The server thread will:
+// 1) Accept and process requests from the client. //remove messages from server when client gets them
+// 2) Add the user’s name to the list of known users. //The same user name cannot have multiple connections at once...remove name once connection severed. //max of 100 users
+// 3) Provide mutual exclusion protection for the data structure that stores the messages. //messages are unique to the two user...only user that sent can retrieve msg
+// 4) Send only the minimal data needed to the client, not the menu or other UI text.
+>>>>>>> master
 
 import java.io.*;
 import java.net.*;
@@ -133,6 +149,24 @@ class ClientWorker implements Runnable
         write(line);
     }
 
+<<<<<<< HEAD
+=======
+    //check to see if client selected Other User (if recieved value == index)
+    //if Other User, prompt for Other User name
+        //double check name is NOT known
+        //create new clients 
+
+    //check to see if client selected Other User (if recieved value == index)
+    //if Other User, prompt for Other User name
+        //double check name is NOT known
+        //create new clients 
+
+    //check to see if client selected Other User (if recieved value == index)
+    //if Other User, prompt for Other User name
+        //double check name is NOT known
+        //create new clients 
+
+>>>>>>> master
     public void sendMessageToAllConnectedUsers()
     {
 
