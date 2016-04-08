@@ -1,3 +1,17 @@
+//The client will:
+// 1) Accept a machine name and port number to connect to as command line arguments.
+// 2) Connect to the server.
+// 3) Prompt for and send the userâ€™s name.
+// 4) Present the following menu of choices to the user:
+//    a. Display the names of all known users.
+//    b. Display the names of all currently connected users.
+//    c. Send a text message to a particular user. //messages can only be up to 80 chars long
+//    d. Send a text message to all currently connected users. //messages can only be up to 80 chars long
+//    e. Send a text message to all known users.
+//    f. Get my messages.  //remove messages from server
+//    g. Exit.
+// 5) Interact with the server to support the menu choices.
+// 6) Ask the user for the next choice or exit.
 
 import java.io.*;
 import java.util.InputMismatchException;
@@ -28,27 +42,41 @@ public class SocketClient
         while(true) {
             //Request User choose menu option and send to server
             pullUpMenu();
-            receive();
-            if(temp == 3)
-            {
-                try {
-                    temp = scan.nextInt();
-                }catch(InputMismatchException exception)
-                {
-                    System.out.println("Invalid input");
-                    System.exit(1);
-                }
-                sendToServer(temp);
-                if(temp == SocketThrdServer.clients.size()-1)
-                {
-
-                }
-            }
-
+            sendToServer(temp);
+            //Retrieve information based on what information is requested
+            switch(temp){
+                case 1:
+                    //receive mega-message of all known users
+                    receive();
+                    break;
+                case 2:
+                    receive();
+                    break;
+                case 3:
+                    //have user type message BLAH BLAH BLAH
+                    //send message
+                    //print line indicating if message sent or not sent
+                    receive();
+                    break;
+                case 4:
+                    //sendMessageToAllConnectedUsers();
+                    break;
+                case 5:
+                    //sendMessageToAllKnownUsers();
+                    break;
+                case 6:
+                    //getMyMessages();
+                    break;
+                case 7:
+                    //closeSocket();
+                    break;
+                default:
+                    //System.out.println(" Invalid Menu");
+                    break;
+            }//end switch()
         }
 
-
-    }
+    }//end communicate()
 
     public void pullUpMenu()
     {
@@ -69,12 +97,13 @@ public class SocketClient
             System.out.println("Invalid input");
             System.exit(1);
         }
-        sendToServer(temp);
-    }
+    }//end pullUpMenu()
+
     public void sendToServer(int n) //for int/menu entries
     {
         out.println(n);
     }
+
     public void sendToServer(String str)// for string entries
     {
         out.println(str);
@@ -86,8 +115,7 @@ public class SocketClient
         try
         {
             String line = in.readLine();
-            System.out.println("Text received: ");
-            System.out.println(line);
+            System.out.println("Text received: " + line);
         }
         catch (IOException e)
         {
@@ -134,4 +162,5 @@ public class SocketClient
         client.listenSocket(host, port);
         client.communicate();
     }
+
 }
