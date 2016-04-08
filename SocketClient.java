@@ -39,19 +39,28 @@ public class SocketClient
     BufferedReader in = null;
     int temp;
     Scanner scan;
+    public static boolean isDuplicate=false;
 
     public void communicate()
     {
         scan = new Scanner(System.in);
-        System.out.println("Enter your name: ");
-        String name = scan.nextLine();
+        do {
+            System.out.println("Enter your name: ");
+            String name = scan.nextLine();
 
+            //Send data over socket
+            sendToServer(name);
 
-        //Send data over socket
-        sendToServer(name);
+            //Receive text from server
+            receive();
 
-        //Receive text from server
-        receive();
+            if(isDuplicate)
+            {
+
+            }
+
+        }while(!isDuplicate);
+
 
         while(true) {
             //Request User choose menu option and send to server
@@ -67,15 +76,27 @@ public class SocketClient
                     System.exit(1);
                 }
                 sendToServer(temp);
+
+                //if Other is chosen, asks for name then sends name to server
                 if(temp == SocketThrdServer.clients.size()-1)
                 {
+                    receive(); //server request for name of user
+                    String str = scan.nextLine();
+                    sendToServer(str);
+                    receive(); //server sends confirmation that message was sent
 
                 }
+            }
+            else if (temp == 4 || temp == 5)
+            {
+                receive();//server requests message
+                String str = scan.nextLine();
+                sendToServer(str);
+                receive();//server sends confirmation that message was sent
             }
 
         }
 
-    }//end communicate()
 
     }
 
@@ -98,7 +119,6 @@ public class SocketClient
             System.out.println("Invalid input");
             System.exit(1);
         }
-    }//end pullUpMenu()
         sendToServer(temp);
     }
     public void sendToServer(int n) //for int/menu entries
