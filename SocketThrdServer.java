@@ -60,7 +60,7 @@ class ClientWorker implements Runnable
             do
             {
                 read();
-                //if(line.length()==1)
+                //if(line.size()==1)
                 {
                     int temp2 = Integer.parseInt(line);
                     switch (temp2) {
@@ -104,12 +104,12 @@ class ClientWorker implements Runnable
         //append name to mega-message of known usernames
         //each username has a newline before the name to format the message.
         index = 0;
-        loopMax = SocketThrdServer.clients.length();
+        loopMax = SocketThrdServer.clients.size();
         line = "";
         while(index < loopMax){
             line += "/n";
             line += "" + index + ") ";
-            line += SocketThrdServer.clients[index].clientName;
+            line += SocketThrdServer.clients.get(index).clientName;
             index++;
         }
         write(line);
@@ -118,14 +118,14 @@ class ClientWorker implements Runnable
     public void displayNamesOfConnectedUsers()
     {
         index = 0;
-        loopMax = SocketThrdServer.clients.length();
+        loopMax = SocketThrdServer.clients.size();
         line = "";
         while(index < loopMax){
             //check if client at index is connected, if so add name to message
-            if(SocketThrdServer.clients[index].connected == true){
+            if(SocketThrdServer.clients.get(index).connected == true){
                 line += "/n";
                 line += "" + index + ") ";
-                line += SocketThrdServer.clients[index].clientName;
+                line += SocketThrdServer.clients.get(index).clientName;
             }//end if
         }//end while loop
         index++;
@@ -134,25 +134,25 @@ class ClientWorker implements Runnable
 
     public void sendMessageToUser()
     {
+        //send list of users to client
         index = 0;
         loopMax = SocketThrdServer.clients.size();
         line = "";
         while(index < loopMax){
             line += "/n";
             line += "" + index + ") ";
-            line += SocketThrdServer.clients[index].clientName;
+            line += SocketThrdServer.clients.get(index).clientName;
             index++;
         }
         //add option to send message to unknown user
         line += "/n";
         line += "" + index + ") Other User";
         write(line);
-    }
-
-    //check to see if client selected Other User (if recieved value == index)
-    //if Other User, prompt for Other User name
+        //check to see if client selected Other User (if recieved value == index)
+        //if Other User, prompt for Other User name
         //double check name is NOT known
-        //create new clients 
+        //create new clients
+    } 
 
     public void sendMessageToAllConnectedUsers()
     {
