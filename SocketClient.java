@@ -1,17 +1,3 @@
-//The client will:
-// 1) Accept a machine name and port number to connect to as command line arguments.
-// 2) Connect to the server.
-// 3) Prompt for and send the userâ€™s name.
-// 4) Present the following menu of choices to the user:
-//    a. Display the names of all known users.
-//    b. Display the names of all currently connected users.
-//    c. Send a text message to a particular user. //messages can only be up to 80 chars long
-//    d. Send a text message to all currently connected users. //messages can only be up to 80 chars long
-//    e. Send a text message to all known users.
-//    f. Get my messages.  //remove messages from server
-//    g. Exit.
-// 5) Interact with the server to support the menu choices.
-// 6) Ask the user for the next choice or exit.
 
 import java.io.*;
 import java.util.InputMismatchException;
@@ -25,19 +11,28 @@ public class SocketClient
     BufferedReader in = null;
     int temp;
     Scanner scan;
+    public static boolean isDuplicate=false;
 
     public void communicate()
     {
         scan = new Scanner(System.in);
-        System.out.println("Enter your name: ");
-        String name = scan.nextLine();
+        do {
+            System.out.println("Enter your name: ");
+            String name = scan.nextLine();
 
+            //Send data over socket
+            sendToServer(name);
 
-        //Send data over socket
-        sendToServer(name);
+            //Receive text from server
+            receive();
 
-        //Receive text from server
-        receive();
+            if(isDuplicate)
+            {
+
+            }
+
+        }while(!isDuplicate);
+
 
         while(true) {
             //Request User choose menu option and send to server
@@ -53,15 +48,27 @@ public class SocketClient
                     System.exit(1);
                 }
                 sendToServer(temp);
+
+                //if Other is chosen, asks for name then sends name to server
                 if(temp == SocketThrdServer.clients.size()-1)
                 {
+                    receive(); //server request for name of user
+                    String str = scan.nextLine();
+                    sendToServer(str);
+                    receive(); //server sends confirmation that message was sent
 
                 }
+            }
+            else if (temp == 4 || temp == 5)
+            {
+                receive();//server requests message
+                String str = scan.nextLine();
+                sendToServer(str);
+                receive();//server sends confirmation that message was sent
             }
 
         }
 
-    }//end communicate()
 
     }
 
@@ -84,7 +91,6 @@ public class SocketClient
             System.out.println("Invalid input");
             System.exit(1);
         }
-    }//end pullUpMenu()
         sendToServer(temp);
     }
     public void sendToServer(int n) //for int/menu entries

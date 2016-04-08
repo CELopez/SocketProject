@@ -1,15 +1,4 @@
-//The server will: 
-// 1) Accept a port number as a command line argument.
-// 2) Accept connections from clients.
-// 3) Create a new thread for each client.
-// 4) Store messages sent to each user. //max of 10 messages per user, so String[10] //max lentgh of messages is 80 characters   //remove messages from server when client gets them
-// 5) End by termination with control-C.
-
-//The server thread will:
-// 1) Accept and process requests from the client. //remove messages from server when client gets them
-// 2) Add the user’s name to the list of known users. //The same user name cannot have multiple connections at once...remove name once connection severed. //max of 100 users
-// 3) Provide mutual exclusion protection for the data structure that stores the messages. //messages are unique to the two user...only user that sent can retrieve msg
-// 4) Send only the minimal data needed to the client, not the menu or other UI text.
+import com.sun.deploy.util.SessionState;
 
 import java.io.*;
 import java.net.*;
@@ -20,12 +9,11 @@ class ClientWorker implements Runnable
     private Socket client;
     public int clientID;
     private String line, clientName;
-    private boolean connected;
     private BufferedReader in = null;
     private PrintWriter out = null;
     private String[] messages = new String[10];
-    private int index;
-    private int loopMax;
+    private boolean connected;
+    private int index, loopMax;
 
     ClientWorker(Socket client, int id, boolean con)
     {
@@ -50,7 +38,7 @@ class ClientWorker implements Runnable
             // Receive text from client
             read();
             clientName = line;
-            //checkIfDuplicateName();
+            checkIfDuplicateName();
 
             // Send response back to client
             line = "Hi " + clientName;
@@ -59,8 +47,6 @@ class ClientWorker implements Runnable
             do
             {
                 read();
-                //if(line.length()==1)
-                {
                     int temp2 = Integer.parseInt(line);
                     switch (temp2) {
                         case 1:
@@ -85,11 +71,10 @@ class ClientWorker implements Runnable
                             closeSocket();
                             break;
                         default:
-                            System.out.println(" Invalid Menu");
+                            System.out.println("Invalid Menu entry");
                             break;
-                    }
                 }
-            }while(client.isConnected());
+            }while(this.connected);
 
             //Close Socket
             closeSocket();
@@ -103,33 +88,33 @@ class ClientWorker implements Runnable
         //append name to mega-message of known usernames
         //each username has a newline before the name to format the message.
         index = 0;
-        loopMax = SocketThrdServer.clients.length();
+        loopMax = SocketThrdServer.clients.size();
         line = "";
         while(index < loopMax){
             line += "/n";
             line += "" + index + ") ";
-            line += SocketThrdServer.clients[index].clientName;
+            line += SocketThrdServer.clients.get(index).clientName;
             index++;
         }
         write(line);
-    }//end displayAllKnownUsers()
+    }
 
     public void displayNamesOfConnectedUsers()
     {
         index = 0;
-        loopMax = SocketThrdServer.clients.length();
+        loopMax = SocketThrdServer.clients.size();
         line = "";
         while(index < loopMax){
             //check if client at index is connected, if so add name to message
-            if(SocketThrdServer.clients[index].connected == true){
+            if(SocketThrdServer.clients.get(index).connected == true){
                 line += "/n";
                 line += "" + index + ") ";
-                line += SocketThrdServer.clients[index].clientName;
+                line += SocketThrdServer.clients.get(index).clientName;
             }//end if
         }//end while loop
         index++;
         write(line);
-    }//end displayNamesOfConnectedUsers()
+    }
 
     public void sendMessageToUser()
     {
@@ -139,7 +124,7 @@ class ClientWorker implements Runnable
         while(index < loopMax){
             line += "/n";
             line += "" + index + ") ";
-            line += SocketThrdServer.clients[index].clientName;
+            line += SocketThrdServer.clients.get(index).clientName;
             index++;
         }
         //add option to send message to unknown user
@@ -147,11 +132,6 @@ class ClientWorker implements Runnable
         line += "" + index + ") Other User";
         write(line);
     }
-
-    //check to see if client selected Other User (if recieved value == index)
-    //if Other User, prompt for Other User name
-        //double check name is NOT known
-        //create new clients 
 
     public void sendMessageToAllConnectedUsers()
     {
@@ -169,18 +149,28 @@ class ClientWorker implements Runnable
     //check if duplicate client names
     public void checkIfDuplicateName()
     {
-        boolean uniqueName=false;
-        do {
-            for( ClientWorker c : SocketThrdServer.clients)
+            for( int x=0; x<SocketThrdServer.clients.size(); x++)
             {
+                ClientWorker c = SocketThrdServer.clients.get(x);
                 if((c.clientName == this.clientName) && (c.clientID!=this.clientID))
                 {
-                    //check if c.connected == true
+                    if (c.connected == true)
+                    {
+                        System.out.println("Error: Socket name already in use");
+                        closeSocket();
+                    }
+                    else
+                    {
+                     write("This user already exists. Would you like to claim it? /n1) Yes /n2) No/nEnter option number indicating your choice: ");
+                        SocketClient.isDuplicate=true;
+                        read();
+
+
+                    }
                     //if so, send error message and do not allow another thread to handle that client
                     //if not, allow thread to handle that client and set c.connected to true
                 }
             }
-        }while(!uniqueName);
     }
 
 
@@ -211,6 +201,7 @@ class ClientWorker implements Runnable
         try
         {
             client.close();
+            this.connected=false;
         }
         catch (IOException e)
         {
@@ -223,7 +214,7 @@ class ClientWorker implements Runnable
 class SocketThrdServer
 {
     ServerSocket server = null;
-    private static int count = 0;
+    private static int count =0;
     public static ArrayList<Thread> workers= new ArrayList<>();
     public static ArrayList<ClientWorker> clients = new ArrayList<>();
 
