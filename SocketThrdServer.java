@@ -1,4 +1,3 @@
-//TEST COMEMENT CHRIS HI OKAY BYE CHRIS
 //The server will: 
 // 1) Accept a port number as a command line argument.
 // 2) Accept connections from clients.
@@ -131,7 +130,8 @@ class ClientWorker implements Runnable
     }
 
     public void sendMessageToUser()
-    {
+    {   
+        //compile list of users to send to user
         index = 0;
         loopMax = SocketThrdServer.clients.size();
         line = "";
@@ -145,6 +145,25 @@ class ClientWorker implements Runnable
         line += "/n";
         line += "" + index + ") Other User";
         write(line);
+        //update line to reflect user's choice
+        read();
+        //if choice is new user
+        if(line == index)
+        {
+            //ask for new user's name/receive user's name
+            //check that new user's name is not a duplicate
+            //send flag if duplicate or not
+            //if not duplicate: 
+                //create new clients for new user, create with third parameter as false
+
+        }
+        //check if messages are full
+        //send message to user with ~@ to indicate this message is a flag
+        //if messages are NOT full:
+            //receive message
+            //put message in clients' message inbox
+        //if messages ARE full:
+            //send message to user saying messages are full
     }
 
     public void sendMessageToAllConnectedUsers()
