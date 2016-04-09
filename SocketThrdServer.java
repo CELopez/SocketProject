@@ -11,8 +11,6 @@
 // 3) Provide mutual exclusion protection for the data structure that stores the messages. //messages are unique to the two user...only user that sent can retrieve msg
 // 4) Send only the minimal data needed to the client, not the menu or other UI text.
 
-import com.sun.deploy.util.SessionState;
-
 import java.io.*;
 import java.net.*;
 import java.util.ArrayList;
