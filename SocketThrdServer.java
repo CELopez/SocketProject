@@ -166,15 +166,34 @@ class ClientWorker implements Runnable
 
     public void sendMessageToAllConnectedUsers()
     {
-
+        //For loop going through all clients:
+            //if connected:
+                //if messages are NOT full:
+                    //put message in client's message box
+                    //send feedback to user saying msg sent to client's name
+                //else:
+                    //send feedback to user saying client's name's inbox is full
     }
 
     public void sendMessageToAllKnownUsers()
     {
-
+        //For loop going through all clients
+            //if messages are NOT full:
+                //put message in client's message box
+                //send feedback to user saying msg sent to client's name
+            //else:
+                //send feedback to user saying client's name's inbox is full
     }
     public void getMyMessages()
     {
+        //Go to user's client //How? client ID?
+        //For loop going through user/client's messages:
+            //if message != "":
+                //append /n + message to line 
+                //set message to ""
+        //if line == "": //meaning every message was empty
+            //line = "/n You have no messages.\n"
+        //send line to user
     }
 
     //check if duplicate client names
