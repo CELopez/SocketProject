@@ -186,6 +186,7 @@ class ClientWorker implements Runnable
     }
     public void getMyMessages()
     {
+        line = "";
         //Go to user's client //How? client ID?
         //For loop going through user/client's messages:
             //if message != "":
