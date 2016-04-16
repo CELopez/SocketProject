@@ -18,12 +18,12 @@ import java.util.ArrayList;
 class ClientWorker implements Runnable
 {
     private Socket client;
-    public int clientID;
-    private String line, clientName, temp;
+    public int clientID, tempInt;
+    private String line, clientName;
     private BufferedReader in = null;
     private PrintWriter out = null;
     private String[] messages = new String[10];
-    private boolean connected, duplicate;
+    private boolean connected, duplicate, tempBool;
     private int index, loopMax;
 
     ClientWorker(Socket client, int id, boolean con)
@@ -147,33 +147,50 @@ class ClientWorker implements Runnable
         write(line);
         //update line to reflect user's choice
         read();
+        tempInt = Integer.parseInt(line);
         //if choice is new user
         if(line == index)
         {
             //ask for new user's name/receive new user's name
             line = "\nEnter the name of the message recepiant:\n";
             write(line);
+
             //check that new user's name is not a duplicate
             read();         //line now equals what the user entered
             duplicate = checkIfNameExists(line);
-            //send flag if duplicate or not
-            temp = line;
-            line = "~@" + duplicate;
-            write(line);
             if(duplicate == false)
             {
-                //create new clients for new user, temp holds new user's name
-                SocketThrdServer.createNewUnknownClient(temp);
+                //create new clients for new user, line holds new user's name
+                SocketThrdServer.createNewUnknownClient(line);
             }
+            //send flag if duplicate or not
+            line = "~@" + duplicate;
+            write(line);
 
+            //end sendMessageToUser() if duplicate
+            if(duplicate == true)
+            {
+                return;
+            }
         }
         //check if messages are full
+        tempBool = checkIfInboxFull(tempInt);
         //send message to user with ~@ to indicate this message is a flag
+        line = "~@" + java.util.Boolean.toString(tempBool);
         //if messages are NOT full:
+        if(tempBool == false)
+        {
             //receive message
+            read();
             //put message in clients' message inbox
-        //if messages ARE full:
-            //send message to user saying messages are full
+            insertMessage(tempInt, line);
+        }
+        //else messages ARE full:
+        else
+        {
+             //send message to user saying messages are full
+            line = "\nCannot send message. Inbox full.\n";
+        }
     }
 
     public void sendMessageToAllConnectedUsers()
@@ -199,7 +216,7 @@ class ClientWorker implements Runnable
     public void getMyMessages()
     {
         line = "";
-        //Go to user's client //How? client ID?
+        //Go to user's client //How? this.client ID.
         //For loop going through user/client's messages:
             //if message != "":
                 //append /n + message to line 
@@ -249,6 +266,29 @@ class ClientWorker implements Runnable
         return false;
     }
 
+    public boolean checkIfInboxFull(int ID){
+        for(int i = 0; i < 10; i++)
+        {   
+            //if any message is empty
+            if(SocketThrdServer.clients.get(ID).messages.get(i) == "") 
+            {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public void insertMessage(int ID, String m){
+        for(int i = 0; i < 10; i++)
+        {   
+            //find first empty message slot
+            if(SocketThrdServer.clients.get(ID).messages[i] == "") 
+            {
+                //store message
+                SocketThrdServer.clients.get(ID).messages[i] = m;
+            }
+        }
+    }
 
     // read in line from client
     public void read()
@@ -346,21 +386,18 @@ class SocketThrdServer
     public void createNewUnknownClient(string name)
     {
         ClientWorker w;
-            try
-            {
-                w = new ClientWorker(server.accept(), SocketThrdServer.count, false);
-                clients.add(w);
-                w.clientName = name;
-                //Thread t = new Thread(SocketThrdServer.clients.get(count));
-                //workers.add(t);
-                //workers.get(SocketThrdScount).start();
-                count++;
-            }
-            catch (IOException e)
-            {
-                System.out.println("Accept failed");
-                System.exit(-1);
-            }
+        try
+        {
+            w = new ClientWorker(server.accept(), SocketThrdServer.count, false);
+            clients.add(w);
+            w.clientName = name;
+            count++;
+        }
+        catch (IOException e)
+        {
+            System.out.println("Accept failed");
+            System.exit(-1);
+        }
     }
 
     public static void main(String[] args)
