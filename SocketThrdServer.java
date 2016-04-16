@@ -19,11 +19,11 @@ class ClientWorker implements Runnable
 {
     private Socket client;
     public int clientID;
-    private String line, clientName;
+    private String line, clientName, temp;
     private BufferedReader in = null;
     private PrintWriter out = null;
     private String[] messages = new String[10];
-    private boolean connected;
+    private boolean connected, duplicate;
     private int index, loopMax;
 
     ClientWorker(Socket client, int id, boolean con)
@@ -128,7 +128,9 @@ class ClientWorker implements Runnable
     }
 
     public void sendMessageToUser()
-    {   
+    {    
+        duplicate = false;
+
         //compile list of users to send to user
         index = 0;
         loopMax = SocketThrdServer.clients.size();
@@ -148,11 +150,21 @@ class ClientWorker implements Runnable
         //if choice is new user
         if(line == index)
         {
-            //ask for new user's name/receive user's name
+            //ask for new user's name/receive new user's name
+            line = "\nEnter the name of the message recepiant:\n";
+            write(line);
             //check that new user's name is not a duplicate
+            read();         //line now equals what the user entered
+            duplicate = checkIfNameExists(line);
             //send flag if duplicate or not
-            //if not duplicate: 
-                //create new clients for new user, create with third parameter as false
+            temp = line;
+            line = "~@" + duplicate;
+            write(line);
+            if(duplicate == false)
+            {
+                //create new clients for new user, temp holds new user's name
+                SocketThrdServer.createNewUnknownClient(temp);
+            }
 
         }
         //check if messages are full
@@ -200,7 +212,7 @@ class ClientWorker implements Runnable
     //check if duplicate client names
     public void checkIfDuplicateName()
     {
-        for(int x = 0; x< SocketThrdServer.clients.size(); x++)
+        for(int x = 0; x < SocketThrdServer.clients.size(); x++)
         {
             ClientWorker c = SocketThrdServer.clients.get(x);
             if((c.clientName == this.clientName) && (c.clientID!=this.clientID))
@@ -222,6 +234,19 @@ class ClientWorker implements Runnable
                 //if not, allow thread to handle that client and set c.connected to true
             }
         }
+    }
+
+    //returns true if name sent as parameter is a known client name
+    public boolean checkIfNameExists(String name)
+    {
+        for(int i = 0; i < SocketThrdServer.clients.size(); i++)
+        {
+            if(SocketThrdServer.clients.get(i).clientName == name)
+            {
+                return true;
+            }
+        }
+        return false;
     }
 
 
@@ -265,7 +290,7 @@ class ClientWorker implements Runnable
 class SocketThrdServer
 {
     ServerSocket server = null;
-    private static int count =0;
+    private static int count = 0;
     public static ArrayList<Thread> workers= new ArrayList<>();
     public static ArrayList<ClientWorker> clients = new ArrayList<>();
 
@@ -316,6 +341,26 @@ class SocketThrdServer
             System.out.println("Could not close socket");
             System.exit(-1);
         }
+    }
+
+    public void createNewUnknownClient(string name)
+    {
+        ClientWorker w;
+            try
+            {
+                w = new ClientWorker(server.accept(), SocketThrdServer.count, false);
+                clients.add(w);
+                w.clientName = name;
+                //Thread t = new Thread(SocketThrdServer.clients.get(count));
+                //workers.add(t);
+                //workers.get(SocketThrdScount).start();
+                count++;
+            }
+            catch (IOException e)
+            {
+                System.out.println("Accept failed");
+                System.exit(-1);
+            }
     }
 
     public static void main(String[] args)
