@@ -270,7 +270,7 @@ class ClientWorker implements Runnable
         for(int i = 0; i < 10; i++)
         {   
             //if any message is empty
-            if(SocketThrdServer.clients.get(ID).messages.get(i) == "") 
+            if(SocketThrdServer.clients.get(ID).messages[i] == "") 
             {
                 return false;
             }
