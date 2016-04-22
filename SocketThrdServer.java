@@ -191,27 +191,29 @@ class ClientWorker implements Runnable
                 SocketThrdServer.setClientName(line, SocketThrdServer.count);
             }
 
-            //send flag if duplicate or not
-            line = "~@0"; // first send code indicating next line is duplicate boolean
-            write(line);
-
-            line = ""+duplicate;
-
-            //end sendMessageToUser() if duplicate
-            if(duplicate == true)
+            //send flag "~@" to indicate duplicate ONLY IF duplicate. The rest of the message can be the same
+            if(duplicate)
             {
+                line = "~@\nName is a duplicate of another user. Returning to main menu.\n";
+                write(line);
+                //end sendMessageToUser() if duplicate
                 return;
             }
+            else
+            {
+                line = "\nNew user profile created for recipient.\n";
+                write(line);
+            }
+           
         }
         //check if messages are full
         tempBool = checkIfInboxFull(tempInt);
-        //send message to user with ~@ to indicate this message is a flag
-        line = "~@2"+tempBool;
+
         //if messages are NOT full:
         if(tempBool == false)
-        {
+        {         
             //prompt user
-            line = "\nWhat message would you like to send? Limit is 80 characters: \n";
+            line = "~#\nWhat message would you like to send? Limit is 80 characters: \n";
             write(line);
 
             //receive message
@@ -225,16 +227,21 @@ class ClientWorker implements Runnable
             
             //put message in clients' message inbox
             insertMessage(tempInt, line);
+
+            //Send message to user saying message placed
+            line = "\nMessage sent to " + SocketThrdServer.clients.get(tempInt).clientName + "\n";
         }
 
 
         //else messages ARE full:
         else
         {
+            //send message to user with ~# to indicate this inbox is full 
             //send message to user saying messages are full
-            line = "\nCannot send message. Inbox full.\n";
+            line = "~#\nCannot send message. Inbox full.\n";
         }
 
+        write(line);
     }
 
     public void sendMessageToAllConnectedUsers()

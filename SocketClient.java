@@ -5,30 +5,10 @@
 // 4) Present the following menu of choices to the user:
 //    a. Display the names of all known users.
 //    b. Display the names of all currently connected users.
-//    c. Send a text message to a particular user.
-// messages can only be up to 80 chars long
-//    d. Send a text message to all currently connected users.
-// messages can only be up to 80 chars long
+//    c. Send a text message to a particular user (messages can only be up to 80 chars long)
+//    d. Send a text message to all currently connected users (messages can only be up to 80 chars long)
 //    e. Send a text message to all known users.
-//    f. Get my messages.
-// remove messages from server
-//    g. Exit.
-// 5) Interact with the server to support the menu choices.
-// 6) Ask the user for the next choice or exit.
-//The client will:
-// 1) Accept a machine name and port number to connect to as command line arguments.
-// 2) Connect to the server.
-// 3) Prompt for and send the users name.
-// 4) Present the following menu of choices to the user:
-//    a. Display the names of all known users.
-//    b. Display the names of all currently connected users.
-//    c. Send a text message to a particular user.
-// messages can only be up to 80 chars long
-//    d. Send a text message to all currently connected users.
-// messages can only be up to 80 chars long
-//    e. Send a text message to all known users.
-//    f. Get my messages.
-// remove messages from server
+//    f. Get my messages and remove messages from server
 //    g. Exit.
 // 5) Interact with the server to support the menu choices.
 // 6) Ask the user for the next choice or exit.
@@ -52,6 +32,7 @@ public class SocketClient
     2 - message full indicator
     */
     public static boolean isDuplicate=false;
+    public static boolean isFull=false;
 
     public void communicate()
     {
@@ -99,6 +80,7 @@ public class SocketClient
 
             //endtest
 
+            //send msg to a particular user
 /*            if(temp == 3)
             {
                 try {
@@ -116,10 +98,31 @@ public class SocketClient
                     receive(); //server request for name of user
                     String str = scan.nextLine();
                     sendToServer(str);
-                    receive(); //server sends confirmation that message was sent
+                    receive(); //server sends confirmation that user was created
 
                 }
+
+                //recieve prompt to compose message. 
+                //If inbox full, boolean isFull was changed
+                receive();
+                if(isFull == false)
+                {
+                    //print prompt to compose message
+                    System.out.println("Text received: ");
+                    System.out.println(line);
+
+                    //Take input from user and send to server
+                    line = scan.nextLine();
+                    sendToServer(line);
+                }
+                else
+                {
+                    //revert boolean back
+                    isFull = false;
+                }
+                receive(); //server sends confirmation that message was sent
             }
+
             else if (temp == 4 || temp == 5)
             {
                 receive();//server requests message
@@ -169,7 +172,9 @@ public class SocketClient
         try
         {
             String line = in.readLine();
-            if(line.charAt(0)=='~' && line.charAt(1) == '!')
+
+            //The messagae of "~@" indicates duplicate
+            if(line.charAt(0)=='~' && line.charAt(1) == '@')
             {
                 systemInstruction = Integer.parseInt(line.substring(2).trim());
                 switch(systemInstruction)
@@ -179,7 +184,18 @@ public class SocketClient
                     default:
                         break;
                 }
-
+            }
+            //The message of "~#" indicates inbox is full
+            else if(line.charAt(0)=='~' && line.charAt(1) == '#'))
+            {
+               systemInstruction = Integer.parseInt(line.substring(2).trim());
+                switch(systemInstruction)
+                {
+                    case 0: isFull = true;
+                        break;
+                    default:
+                        break;
+                }
             }
             else {
                 System.out.println("Text received: ");
