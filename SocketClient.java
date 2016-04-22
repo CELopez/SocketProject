@@ -1,28 +1,34 @@
 //The client will:
 // 1) Accept a machine name and port number to connect to as command line arguments.
 // 2) Connect to the server.
-// 3) Prompt for and send the userâ€™s name.
+// 3) Prompt for and send the users name.
 // 4) Present the following menu of choices to the user:
 //    a. Display the names of all known users.
 //    b. Display the names of all currently connected users.
-//    c. Send a text message to a particular user. //messages can only be up to 80 chars long
-//    d. Send a text message to all currently connected users. //messages can only be up to 80 chars long
+//    c. Send a text message to a particular user.
+// messages can only be up to 80 chars long
+//    d. Send a text message to all currently connected users.
+// messages can only be up to 80 chars long
 //    e. Send a text message to all known users.
-//    f. Get my messages.  //remove messages from server
+//    f. Get my messages.
+// remove messages from server
 //    g. Exit.
 // 5) Interact with the server to support the menu choices.
 // 6) Ask the user for the next choice or exit.
 //The client will:
 // 1) Accept a machine name and port number to connect to as command line arguments.
 // 2) Connect to the server.
-// 3) Prompt for and send the userâ€™s name.
+// 3) Prompt for and send the users name.
 // 4) Present the following menu of choices to the user:
 //    a. Display the names of all known users.
 //    b. Display the names of all currently connected users.
-//    c. Send a text message to a particular user. //messages can only be up to 80 chars long
-//    d. Send a text message to all currently connected users. //messages can only be up to 80 chars long
+//    c. Send a text message to a particular user.
+// messages can only be up to 80 chars long
+//    d. Send a text message to all currently connected users.
+// messages can only be up to 80 chars long
 //    e. Send a text message to all known users.
-//    f. Get my messages.  //remove messages from server
+//    f. Get my messages.
+// remove messages from server
 //    g. Exit.
 // 5) Interact with the server to support the menu choices.
 // 6) Ask the user for the next choice or exit.
@@ -39,34 +45,61 @@ public class SocketClient
     BufferedReader in = null;
     int temp;
     Scanner scan;
+    private int systemInstruction;
+    /*System Instructions:
+    0 - Repeated User Name indicator
+    1 - Next value is required by Socket
+    2 - message full indicator
+    */
     public static boolean isDuplicate=false;
 
     public void communicate()
     {
         scan = new Scanner(System.in);
-        do {
-            System.out.println("Enter your name: ");
-            String name = scan.nextLine();
+//        do {
+        System.out.println("Enter your name: ");
+        String name = scan.nextLine();
 
-            //Send data over socket
-            sendToServer(name);
+        //Send data over socket
+        sendToServer(name);
 
-            //Receive text from server
-            receive();
-
+        //Receive text from server
+        receive();
+/*
+            //Condition if there is a duplicate of this name on server
             if(isDuplicate)
             {
+                receive();
+                do {
+                    try
+                    {
+                        temp = scan.nextInt();
+                        sendToServer(temp);
+                    }catch(InputMismatchException exception)
+                    {
+                        System.out.println("Invalid input");
+                    }
 
+                }while(isDuplicate);
             }
-
-        }while(!isDuplicate);
+*/
+//        }while(!isDuplicate);
 
 
         while(true) {
             //Request User choose menu option and send to server
             pullUpMenu();
             receive();
-            if(temp == 3)
+
+            //test
+            while(true)
+            {
+                pullUpMenu();
+            }
+
+            //endtest
+
+/*            if(temp == 3)
             {
                 try {
                     temp = scan.nextInt();
@@ -94,7 +127,7 @@ public class SocketClient
                 sendToServer(str);
                 receive();//server sends confirmation that message was sent
             }
-
+*/
         }
 
 
@@ -136,8 +169,22 @@ public class SocketClient
         try
         {
             String line = in.readLine();
-            System.out.println("Text received: ");
-            System.out.println(line);
+            if(line.charAt(0)=='~' && line.charAt(1) == '!')
+            {
+                systemInstruction = Integer.parseInt(line.substring(2).trim());
+                switch(systemInstruction)
+                {
+                    case 0: isDuplicate = true;
+                        break;
+                    default:
+                        break;
+                }
+
+            }
+            else {
+                System.out.println("Text received: ");
+                System.out.println(line);
+            }
         }
         catch (IOException e)
         {
