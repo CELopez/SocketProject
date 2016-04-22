@@ -252,6 +252,24 @@ class ClientWorker implements Runnable
         line = "";
         //Go to user's client //How? this.client ID.
         //For loop going through user/client's messages:
+        for(int i = 0; i < 10; i++)
+        {
+            //if message != "":
+            if(this.messages[i] != "")
+            {
+                line += this.messages[i];
+                line += "\n";
+
+                //clear message
+                this.messages[i] = "";
+            }     
+        }
+        if(line == "\n")    //meaning every message was empty
+        {
+            line = "\nYou have no messages.\n";
+        }
+
+        write(line);
         //if message != "":
         //append /n + message to line
         //set message to ""
