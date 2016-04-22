@@ -1,0 +1,35 @@
+diff a/SocketThrdServer.java b/SocketThrdServer.java	(rejected hunks)
+@@ -227,33 +227,6 @@
+     }
+ 
+     public void sendMessageToAllConnectedUsers()
+-    {   
+-        //receive message
+-        read();
+-
+-        //loop going through all clients:
+-        index = 0;
+-        loopMax = SocketThrdServer.clients.size();
+-        while(index < loopMax)
+-        {
+-            //if connected:
+-            if(SocketThrdServer.clients.get(index).connected)
+-            {
+-                // if messages are NOT full:
+-                if(!checkIfInboxFull(index))
+-                {
+-                   //put message in client's message box
+-                   insertMessage(index, line);
+-                   //send feedback to user saying msg sent to client's name
+-                   write("\nMessage sent to " + SocketThrdServer.clients.get(index).clientName + "\n");
+-                }
+-                else
+-                {
+-                    //send feedback to user saying client's name's inbox is full
+-                    write("\n" + SocketThrdServer.clients.get(index).clientName + "\'s inbox is full.\n");
+-                }
+-            }
+-        }        
+     {
+         //For loop going through all clients:
+         //if connected:
