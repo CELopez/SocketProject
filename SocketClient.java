@@ -1,520 +1,234 @@
-//The server will:
-// 1) Accept a port number as a command line argument.
-// 2) Accept connections from clients.
-// 3) Create a new thread for each client.
-// 4) Store messages sent to each user.
-// max of 10 messages per user, so String[10]
-// max lentgh of messages is 80 characters
-// remove messages from server when client gets them
-// 5) End by termination with control-C.
-
-//The server thread will:
-// 1) Accept and process requests from the client.
-// remove messages from server when client gets them
-// 2) Add the users name to the list of known users.
-// The same user name cannot have multiple connections at once...remove name once connection severed.
-// max of 100 users
-// 3) Provide mutual exclusion protection for the data structure that stores the messages. //messages are unique to the two user...only user that sent can retrieve msg
-// 4) Send only the minimal data needed to the client, not the menu or other UI text.
-
-
-//If server gets killed, kill all clients
+//The client will:
+// 1) Accept a machine name and port number to connect to as command line arguments.
+// 2) Connect to the server.
+// 3) Prompt for and send the users name.
+// 4) Present the following menu of choices to the user:
+//    a. Display the names of all known users.
+//    b. Display the names of all currently connected users.
+//    c. Send a text message to a particular user.
+// messages can only be up to 80 chars long
+//    d. Send a text message to all currently connected users.
+// messages can only be up to 80 chars long
+//    e. Send a text message to all known users.
+//    f. Get my messages.
+// remove messages from server
+//    g. Exit.
+// 5) Interact with the server to support the menu choices.
+// 6) Ask the user for the next choice or exit.
+//The client will:
+// 1) Accept a machine name and port number to connect to as command line arguments.
+// 2) Connect to the server.
+// 3) Prompt for and send the users name.
+// 4) Present the following menu of choices to the user:
+//    a. Display the names of all known users.
+//    b. Display the names of all currently connected users.
+//    c. Send a text message to a particular user.
+// messages can only be up to 80 chars long
+//    d. Send a text message to all currently connected users.
+// messages can only be up to 80 chars long
+//    e. Send a text message to all known users.
+//    f. Get my messages.
+// remove messages from server
+//    g. Exit.
+// 5) Interact with the server to support the menu choices.
+// 6) Ask the user for the next choice or exit.
 
 import java.io.*;
+import java.util.InputMismatchException;
+import java.util.Scanner;
 import java.net.*;
-import java.util.ArrayList;
 
-class ClientWorker implements Runnable
+public class SocketClient
 {
-    private Socket client;
-    public int clientID, tempInt;
-    private String line, clientName;
-    private BufferedReader in = null;
-    private PrintWriter out = null;
-    private String[] messages = new String[10];
-    private boolean connected, duplicate, tempBool;
-    private int index, loopMax;
+    Socket socket = null;
+    PrintWriter out = null;
+    BufferedReader in = null;
+    int temp;
+    Scanner scan;
+    private int systemInstruction;
+    /*System Instructions:
+    0 - Repeated User Name indicator
+    1 - Next value is required by Socket
+    2 - message full indicator
+    */
+    public static boolean isDuplicate=false;
 
-
-    ClientWorker(Socket client, int id, boolean con)
+    public void communicate()
     {
-        this.client = client;
-        clientID = id;
-        connected = con;
-    }
+        scan = new Scanner(System.in);
+//        do {
+        System.out.println("Enter your name: ");
+        String name = scan.nextLine();
 
-    public void run()
-    {
-        try
-        {
-            in = new BufferedReader(new InputStreamReader(client.getInputStream()));
-            out = new PrintWriter(client.getOutputStream(), true);
-        }
-        catch (IOException e)
-        {
-            System.out.println("in or out failed");
-            System.exit(-1);
-        }
-        // Receive text from client
-        read();
-        clientName = line;
-        checkIfDuplicateName();
+        //Send data over socket
+        sendToServer(name);
 
-        // Send response back to client
-        line = "Hi " + clientName;
-        write(line);
+        //Receive text from server
+        receive();
 /*
-            do
+            //Condition if there is a duplicate of this name on server
+            if(isDuplicate)
             {
-                read();
-                    int temp2 = Integer.parseInt(line);
-                    switch (temp2) {
-                        case 1:
-                            displayAllKnownUsers();
-                            break;
-                        case 2:
-                            displayNamesOfConnectedUsers();
-                            break;
-                        case 3:
-                            sendMessageToUser();
-                            break;
-                        case 4:
-                            sendMessageToAllConnectedUsers();
-                            break;
-                        case 5:
-                            sendMessageToAllKnownUsers();
-                            break;
-                        case 6:
-                            getMyMessages();
-                            break;
-                        case 7:
-                            closeSocket();
-                            break;
-                        default:
-                            System.out.println("Invalid Menu entry");
-                            break;
-                }
-            }while(this.connected);
+                receive();
+                do {
+                    try
+                    {
+                        temp = scan.nextInt();
+                        sendToServer(temp);
+                    }catch(InputMismatchException exception)
+                    {
+                        System.out.println("Invalid input");
+                    }
+
+                }while(isDuplicate);
+            }
 */
-        //Test run
-        do {
-            read();
-            if(line.equals("7"))
+//        }while(!isDuplicate);
+
+
+        while(true) {
+            //Request User choose menu option and send to server
+            pullUpMenu();
+            receive();
+
+            //test
+            while(true)
             {
-                closeSocket();
+                pullUpMenu();
             }
 
-        }while(this.connected);
+            //endtest
 
-
-    }
-    public void setClientName(String name)
-    {
-        this.clientName = name;
-    }
-
-    //Start of client's menu options
-
-    public void displayAllKnownUsers()
-    {
-        //Go through array of ClientWorkers up until count of ClientWorkers
-        //append name to mega-message of known usernames
-        //each username has a newline before the name to format the message.
-        index = 0;
-        loopMax = SocketThrdServer.clients.size();
-        line = "";
-        while(index < loopMax){
-            line += "/n";
-            line += "" + index + ") ";
-            line += SocketThrdServer.clients.get(index).clientName;
-            index++;
-        }
-        write(line);
-    }
-
-    public void displayNamesOfConnectedUsers()
-    {
-        index = 0;
-        loopMax = SocketThrdServer.clients.size();
-        line = "";
-        while(index < loopMax){
-            //check if client at index is connected, if so add name to message
-            if(SocketThrdServer.clients.get(index).connected == true){
-                line += "/n";
-                line += "" + index + ") ";
-                line += SocketThrdServer.clients.get(index).clientName;
-            }//end if
-        }//end while loop
-        index++;
-        write(line);
-    }
-
-    public void sendMessageToUser()
-    {
-        duplicate = false;
-
-        //compile list of users to send to user
-        index = 0;
-        loopMax = SocketThrdServer.clients.size();
-        line = "";
-        while(index < loopMax){
-            line += "/n";
-            line += "" + index + ") ";
-            line += SocketThrdServer.clients.get(index).clientName;
-            index++;
-        }
-        //add option to send message to unknown user
-        line += "/n";
-        line += "" + index + ") Other User";
-        write(line);
-
-        //update line to reflect user's choice
-        read();
-        tempInt = Integer.parseInt(line);
-        //if choice is new user
-        if(tempInt == index)
-        {
-            //ask for new user's name/receive user's name
-            line = "\nEnter the name of the message recipient:\n";
-            write(line);
-
-            //check that new user's name is not a duplicate
-            read();         // line now equals what the user entered
-            duplicate = checkIfNameExists(line);
-            if(duplicate == false)
+/*            if(temp == 3)
             {
-                //create new clients for new user, line holds new user's name
-                SocketThrdServer.clientMaker(false);
-                SocketThrdServer.setClientName(line, SocketThrdServer.count);
-            }
-
-            //send flag if duplicate or not
-            line = "~@0"; // first send code indicating next line is duplicate boolean
-            write(line);
-
-            line = ""+duplicate;
-
-            //end sendMessageToUser() if duplicate
-            if(duplicate == true)
-            {
-                return;
-            }
-        }
-        //check if messages are full
-        tempBool = checkIfInboxFull(tempInt);
-        //send message to user with ~@ to indicate this message is a flag
-        line = "~@2"+tempBool;
-        //if messages are NOT full:
-        if(tempBool == false)
-        {
-            //prompt user
-            line = "\nWhat message would you like to send? Limit is 80 characters: \n";
-            write(line);
-
-            //receive message
-            read();
-
-            //Truncate to 80 characters
-            if (line.length() > 80)
-            {
-                line = line.substring(0, 79);
-            }
-
-            //put message in clients' message inbox
-            insertMessage(tempInt, line);
-        }
-
-
-        //else messages ARE full:
-        else
-        {
-            //send message to user saying messages are full
-            line = "\nCannot send message. Inbox full.\n";
-        }
-
-    }
-
-    public void sendMessageToAllConnectedUsers()
-    {
-        //prompt user
-        line = "\nWhat message would you like to send? Limit is 80 characters: \n";
-        write(line);
-
-        //receive message
-        read();
-
-        //Truncate to 80 characters
-        if (line.length() > 80)
-        {
-            line = line.substring(0, 79);
-        }
-
-
-        //loop going through all clients:
-        index = 0;
-        loopMax = SocketThrdServer.clients.size();
-        while(index < loopMax)
-        {
-            //if connected:
-            if(SocketThrdServer.clients.get(index).connected)
-            {
-                // if messages are NOT full:
-                if(!checkIfInboxFull(index))
+                try {
+                    temp = scan.nextInt();
+                }catch(InputMismatchException exception)
                 {
-                    //put message in client's message box
-                    insertMessage(index, line);
-                    //send feedback to user saying msg sent to client's name
-                    write("\nMessage sent to " + SocketThrdServer.clients.get(index).clientName + "\n");
+                    System.out.println("Invalid input");
+                    System.exit(1);
                 }
-                else
+                sendToServer(temp);
+
+                //if Other is chosen, asks for name then sends name to server
+                if(temp == SocketThrdServer.clients.size()-1)
                 {
-                    //send feedback to user saying client's name's inbox is full
-                    write("\n" + SocketThrdServer.clients.get(index).clientName + "\'s inbox is full.\n");
+                    receive(); //server request for name of user
+                    String str = scan.nextLine();
+                    sendToServer(str);
+                    receive(); //server sends confirmation that message was sent
+
                 }
             }
+            else if (temp == 4 || temp == 5)
+            {
+                receive();//server requests message
+                String str = scan.nextLine();
+                sendToServer(str);
+                receive();//server sends confirmation that message was sent
+            }
+*/
         }
+
+
     }
 
-    public void sendMessageToAllKnownUsers()
+    public void pullUpMenu()
     {
-        //prompt user
-        line = "\nWhat message would you like to send? Limit is 80 characters: \n";
-        write(line);
+        try {
+            System.out.println("Menu: ");
+            System.out.println("1) Display the names of all known users");
+            System.out.println("2) Display the names of all currently connected users");
+            System.out.println("3) Send a text message to a particular user");
+            System.out.println("4) Send a text message to all currently connected users");
+            System.out.println("5) Send a text message to all known users ");
+            System.out.println("6) Get my messages");
+            System.out.println("7) Exit");
+            System.out.print("Enter option number indicating your choice: ");
 
-        //receive message
-        read();
-
-        //Truncate to 80 characters
-        if (line.length() > 80)
+            temp = scan.nextInt();
+        }catch(InputMismatchException exception)
         {
-            line = line.substring(0, 79);
+            System.out.println("Invalid input");
+            System.exit(1);
         }
-
-        //loop going through all clients:
-        index = 0;
-        loopMax = SocketThrdServer.clients.size();
-        while(index < loopMax)
-        {
-            // if messages are NOT full:
-            if(!checkIfInboxFull(index))
-            {
-                //put message in client's message box
-                insertMessage(index, line);
-                //send feedback to user saying msg sent to client's name
-                write("\nMessage sent to " + SocketThrdServer.clients.get(index).clientName + "\n");
-            }
-            else
-            {
-                //send feedback to user saying client's name's inbox is full
-                write("\n" + SocketThrdServer.clients.get(index).clientName + "\'s inbox is full.\n");
-            }
-        }
-
+        sendToServer(temp);
     }
-    public void getMyMessages() {
-        line = "";
-
-        //For loop going through user/client's messages:
-        for (int i = 0; i < 10; i++) {
-            //if message != "":
-            if (this.messages[i] != "") {
-                line += this.messages[i];
-                line += "\n";
-
-                //clear message
-                this.messages[i] = "";
-            }
-        }
-
-        //check if duplicate client names
-    }
-    public void checkIfDuplicateName()
+    public void sendToServer(int n) //for int/menu entries
     {
-        for(int x = 0; x< SocketThrdServer.clients.size(); x++)
-        {
-            ClientWorker c = SocketThrdServer.clients.get(x);
-            if((c.clientName == this.clientName) && (c.clientID!=this.clientID))
-            {
-                if (c.connected == true)
-                {
-                    System.out.println("Error: Socket name already in use");
-                    this.closeSocket();
-                }
-                else
-                {
-                    write("~!0");
-                    write("This user already exists. Would you like to claim it? /n1) Yes /n2) No/nEnter option number indicating your choice: ");
-
-                    read();
-
-
-                }
-                //if so, send error message and do not allow another thread to handle that client
-                //if not, allow thread to handle that client and set c.connected to true
-            }
-        }
+        out.println(n);
     }
-
-    //returns true if name sent as parameter is a known client name
-    public boolean checkIfNameExists(String name)
+    public void sendToServer(String str)// for string entries
     {
-        for(int i = 0; i < SocketThrdServer.clients.size(); i++)
-        {
-            if(SocketThrdServer.clients.get(i).clientName == name)
-            {
-                return true;
-            }
-        }
-        return false;
+        out.println(str);
     }
 
-    public boolean checkIfInboxFull(int ID){
-        for(int i = 0; i < 10; i++)
-        {
-            //if any message is empty
-            if(SocketThrdServer.clients.get(ID).messages[i] == null)
-            {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    public void insertMessage(int ID, String m){
-        for(int i = 0; i < 10; i++)
-        {
-            //find first empty message slot
-            if(SocketThrdServer.clients.get(ID).messages[i] == null)
-            {
-                //store message
-                SocketThrdServer.clients.get(ID).messages[i] = m;
-            }
-        }
-    }
-
-    // read in line from client
-    public void read()
+    public void receive()
     {
+
         try
         {
-            //get text from client
-            line = in.readLine();
+            String line = in.readLine();
+            if(line.charAt(0)=='~' && line.charAt(1) == '!')
+            {
+                systemInstruction = Integer.parseInt(line.substring(2).trim());
+                switch(systemInstruction)
+                {
+                    case 0: isDuplicate = true;
+                        break;
+                    default:
+                        break;
+                }
 
-        }catch(IOException e)
-        {
-            System.out.println("Read Failed");
-            System.exit(-1);
-        }
-    }
-
-    //write message to client
-    public void write(String toSend)
-    {
-        //send response to client
-        out.println(toSend);
-    }
-    // close socket
-    public void closeSocket()
-    {
-        try
-        {
-            client.close();
-            this.connected=false;
-            System.out.println("Client: "+this.clientName+", ID: "+this.clientID+" has been disconnected");
+            }
+            else {
+                System.out.println("Text received: ");
+                System.out.println(line);
+            }
         }
         catch (IOException e)
         {
-            System.out.println("Close failed");
-            System.exit(-1);
+            System.out.println("Read failed");
+            System.exit(1);
         }
     }
-}
-
-class SocketThrdServer
-{
-    static ServerSocket server = null;
-    public static int count =0;
-    public static ArrayList<Thread> workers= new ArrayList<>();
-    public static ArrayList<ClientWorker> clients = new ArrayList<>();
 
 
-    public void listenSocket(int port)
+
+    public void listenSocket(String host, int port)
     {
+        //Create socket connection
         try
         {
-            server = new ServerSocket(port);
-            System.out.println("Server running on port " + port +
-                    "," + " use ctrl-C to end");
+            socket = new Socket(host, port);
+            out = new PrintWriter(socket.getOutputStream(), true);
+            in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+        }
+        catch (UnknownHostException e)
+        {
+            System.out.println("Unknown host");
+            System.exit(1);
         }
         catch (IOException e)
         {
-            System.out.println("Error creating socket");
-            System.exit(-1);
-        }
-
-
-
-        while(true)
-        {
-            clientMaker(true);
-            threadMaker();
-            count++;
-        }
-    }
-
-    public static void clientMaker(boolean isConnected)
-    {
-        ClientWorker w;
-        try
-        {
-            w = new ClientWorker(server.accept(), count, isConnected);
-            clients.add(w);
-            System.out.println("Client ID: "+w.clientID+" is connected");
-        }
-        catch (IOException e)
-        {
-            System.out.println("Accept failed");
-            System.exit(-1);
-        }
-    }
-
-    public void threadMaker()
-    {
-        Thread t = new Thread(clients.get(count));
-        workers.add(t);
-        workers.get(count).start();
-    }
-
-
-    protected void finalize()
-    {
-        try
-        {
-            server.close();
-        }
-        catch (IOException e)
-        {
-            System.out.println("Could not close socket");
-            System.exit(-1);
+            System.out.println("No I/O");
+            System.exit(1);
         }
     }
 
     public static void main(String[] args)
     {
-        if (args.length != 1)
+        if (args.length != 2)
         {
-            System.out.println("Usage: java SocketThrdServer port");
+            System.out.println("Usage:  client hostname port");
             System.exit(1);
         }
 
-        SocketThrdServer server = new SocketThrdServer();
-        int port = Integer.valueOf(args[0]);
-        server.listenSocket(port);
-    }
-    public static void setClientName(String name, int position)
-    {
-        clients.get(position).setClientName(name);
+        SocketClient client = new SocketClient();
 
+        String host = args[0];
+        int port = Integer.valueOf(args[1]);
+        client.listenSocket(host, port);
+        client.communicate();
     }
-
 }
