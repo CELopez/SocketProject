@@ -253,7 +253,8 @@ class ClientWorker implements Runnable
                     write("\n" + SocketThrdServer.clients.get(index).clientName + "\'s inbox is full.\n");
                 }
             }
-        }        
+        }
+    }        
 
     public void sendMessageToAllKnownUsers()
     {   
@@ -278,7 +279,8 @@ class ClientWorker implements Runnable
                 //send feedback to user saying client's name's inbox is full
                 write("\n" + SocketThrdServer.clients.get(index).clientName + "\'s inbox is full.\n");
             }
-        }  
+        }
+    }  
 
     public void getMyMessages()
     {
