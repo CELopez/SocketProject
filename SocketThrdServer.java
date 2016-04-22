@@ -227,6 +227,33 @@ class ClientWorker implements Runnable
     }
 
     public void sendMessageToAllConnectedUsers()
+    {   
+        //receive message
+        read();
+
+        //loop going through all clients:
+        index = 0;
+        loopMax = SocketThrdServer.clients.size();
+        while(index < loopMax)
+        {
+            //if connected:
+            if(SocketThrdServer.clients.get(index).connected)
+            {
+                // if messages are NOT full:
+                if(!checkIfInboxFull(index))
+                {
+                   //put message in client's message box
+                   insertMessage(index, line);
+                   //send feedback to user saying msg sent to client's name
+                   write("\nMessage sent to " + SocketThrdServer.clients.get(index).clientName + "\n");
+                }
+                else
+                {
+                    //send feedback to user saying client's name's inbox is full
+                    write("\n" + SocketThrdServer.clients.get(index).clientName + "\'s inbox is full.\n");
+                }
+            }
+        }        
     {
         //For loop going through all clients:
         //if connected:
@@ -252,6 +279,24 @@ class ClientWorker implements Runnable
         line = "";
         //Go to user's client //How? this.client ID.
         //For loop going through user/client's messages:
+        for(int i = 0; i < 10; i++)
+        {
+            //if message != "":
+            if(this.messages[i] != "")
+            {
+                line += this.messages[i];
+                line += "\n";
+
+                //clear message
+                this.messages[i] = "";
+            }     
+        }
+        if(line == "\n")    //meaning every message was empty
+        {
+            line = "\nYou have no messages.\n";
+        }
+
+        write(line);
         //if message != "":
         //append /n + message to line
         //set message to ""
