@@ -210,8 +210,19 @@ class ClientWorker implements Runnable
         //if messages are NOT full:
         if(tempBool == false)
         {
+            //prompt user
+            line = "\nWhat message would you like to send? Limit is 80 characters: \n";
+            write(line);
+
             //receive message
             read();
+
+            //Truncate to 80 characters
+            if (line.length() > 80)
+            {
+                line = line.substring(0, 79);
+            }
+            
             //put message in clients' message inbox
             insertMessage(tempInt, line);
         }
@@ -228,8 +239,19 @@ class ClientWorker implements Runnable
 
     public void sendMessageToAllConnectedUsers()
     {   
+        //prompt user
+        line = "\nWhat message would you like to send? Limit is 80 characters: \n";
+        write(line);
+
         //receive message
         read();
+
+        //Truncate to 80 characters
+        if (line.length() > 80)
+        {
+            line = line.substring(0, 79);
+        }
+
 
         //loop going through all clients:
         index = 0;
@@ -258,8 +280,18 @@ class ClientWorker implements Runnable
 
     public void sendMessageToAllKnownUsers()
     {   
+        //prompt user
+        line = "\nWhat message would you like to send? Limit is 80 characters: \n";
+        write(line);
+
         //receive message
         read();
+
+        //Truncate to 80 characters
+        if (line.length() > 80)
+        {
+            line = line.substring(0, 79);
+        }
 
         //loop going through all clients:
         index = 0;
