@@ -148,20 +148,26 @@ class ClientWorker implements Runnable
     public void sendMessageToUser()
     {
         duplicate = false;
-        //compile list of users to send to user
+        write("~!2");
+
+        write("\nChoose a user to send message to:");
+        
+        //compile list of users to send to user        
         index = 0;
         loopMax = SocketThrdServer.clients.size();
-        line = "\nChoose a user to send message to:";
         while(index < loopMax){
-            line += "\n";
+            line = "\n";
             line += "" + index + ") ";
             line += SocketThrdServer.clients.get(index).clientName;
+            write(line);
             index++;
         }
         //add option to send message to unknown user
         line += "\n";
         line += "" + index + ") Other User";
-        write(line);
+        write(line);        
+        //toggle isLooping off
+        write("~!2");
 
         //update line to reflect user's choice
         read();

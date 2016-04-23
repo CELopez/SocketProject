@@ -104,7 +104,7 @@ public class SocketClient
             }
 */
             receive();
-            if(temp == 1 || temp == 2 || temp == 6)
+            if(temp == 1 || temp == 2 || temp == 3|| temp == 6)
             {
                 receive();
                 do
