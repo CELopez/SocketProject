@@ -69,33 +69,34 @@ class ClientWorker implements Runnable
 
             do
             {
+                //receive menu choice from user
                 read();
-                    int temp2 = Integer.parseInt(line.trim());
-                    switch (temp2) {
-                        case 1:
-                            displayAllKnownUsers();
-                            break;
-                        case 2:
-                            displayNamesOfConnectedUsers();
-                            break;
-                        case 3:
-                            sendMessageToUser();
-                            break;
-                        case 4:
-                            sendMessageToAllConnectedUsers();
-                            break;
-                        case 5:
-                            sendMessageToAllKnownUsers();
-                            break;
-                        case 6:
-                            getMyMessages();
-                            break;
-                        case 7:
-                            this.closeSocket();
-                            break;
-                        default:
-                            System.out.println("Invalid Menu entry");
-                            break;
+                int temp2 = Integer.parseInt(line.trim());
+                switch (temp2) {
+                    case 1:
+                        displayAllKnownUsers();
+                        break;
+                    case 2:
+                        displayNamesOfConnectedUsers();
+                        break;
+                    case 3:
+                        sendMessageToUser();
+                        break;
+                    case 4:
+                        sendMessageToAllConnectedUsers();
+                        break;
+                    case 5:
+                        sendMessageToAllKnownUsers();
+                        break;
+                    case 6:
+                        getMyMessages();
+                        break;
+                    case 7:
+                        this.closeSocket();
+                        break;
+                    default:
+                        System.out.println("Invalid Menu entry");
+                        break;
                 }
             }while(this.connected);
 
@@ -166,8 +167,7 @@ class ClientWorker implements Runnable
         if(tempInt == index)
         {
             //ask for new user's name/receive user's name
-            line = "\nEnter the name of the message recipient:\n";
-            write(line);
+            write("\nEnter the name of the message recipient:\n");
 
             //check that new user's name is not a duplicate
             read();         // line now equals what the user entered
@@ -197,8 +197,7 @@ class ClientWorker implements Runnable
         if(tempBool == false)
         {
             //prompt user
-            line = "\nWhat message would you like to send? Limit is 80 characters: \n";
-            write(line);
+            write("\nWhat message would you like to send? Limit is 80 characters: \n");
 
             //receive message
             read();
@@ -211,6 +210,7 @@ class ClientWorker implements Runnable
 
             //put message in clients' message inbox
             insertMessage(tempInt, line);
+            write("\nMessage has been sent.\n");
         }
 
         //else messages ARE full:

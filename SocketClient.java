@@ -88,6 +88,7 @@ public class SocketClient
         while(true) {
             //Request User choose menu option and send to server
             pullUpMenu();
+
             receive();
 
 /*            if(temp == 3)
@@ -99,17 +100,39 @@ public class SocketClient
                     System.out.println("Invalid input");
                     System.exit(1);
                 }
+                //send user's choice of who to send msg to, to the server
                 sendToServer(temp);
+
+                String str = "";
 
                 //if Other is chosen, asks for name then sends name to server
                 if(temp == SocketThrdServer.clients.size()-1)
                 {
                     receive(); //server request for name of user
-                    String str = scan.nextLine();
+                    str = scan.nextLine();
                     sendToServer(str);
-                    receive(); //server sends confirmation that message was sent
-
                 }
+
+                //Condition if there is a duplicate of this name on server OR full inbox
+                receive();      //if no duplicate nor full inbox, this is a prompt to enter msg
+                if(isDuplicate)
+                {
+                    receive(); //recieve message "Exiting to main menu"
+                }
+                else if(!isFull)
+                {
+                    //recieve msg from user and send to server
+                    str = scan.nextLine();
+                    sendToServer(str);
+                }
+                //else there is NOT a duplicate but messages ARE full
+                else
+                {
+                    //receive message of inbox being full
+                    receive();
+                }
+                //toggle of either isDuplicate or isFull OR confirmation of msg being sent
+                receive();
             }
             else if (temp == 4 || temp == 5)
             {
@@ -124,6 +147,7 @@ public class SocketClient
 
     }
 
+    //prints out menu, takes user menu choice, and sends choice to server
     public void pullUpMenu()
     {
         try {
