@@ -23,6 +23,7 @@
 import java.io.*;
 import java.net.*;
 import java.util.ArrayList;
+import java.util.concurrent.Semaphore;
 
 class ClientWorker implements Runnable
 {
@@ -55,20 +56,24 @@ class ClientWorker implements Runnable
             System.out.println("in or out failed");
             System.exit(-1);
         }
+            // Receive text from client
+            read();
+            clientName = line;
 
-        // Receive text from client
-        read();
-        clientName = line;
-        checkIfDuplicateName();
+            // Send response back to client
+            line = "Hi " + clientName;
+            write(line);
 
-        // Send response back to client
-        line = "Hi " + clientName;
-        write(line);
-/*
+            //check if name is a duplicate/already in use by a client
+            checkIfDuplicateName();
+
+
+
+
             do
             {
                 read();
-                    int temp2 = Integer.parseInt(line);
+                    int temp2 = Integer.parseInt(line.trim());
                     switch (temp2) {
                         case 1:
                             displayAllKnownUsers();
@@ -89,26 +94,14 @@ class ClientWorker implements Runnable
                             getMyMessages();
                             break;
                         case 7:
-                            closeSocket();
+                            this.closeSocket();
                             break;
                         default:
                             System.out.println("Invalid Menu entry");
                             break;
                 }
             }while(this.connected);
-*/
-        //Test run
-        do {
-            read();
-            if(line.equals("7"))
-            {
-                closeSocket();
-            }
 
-        }while(this.connected);
-
-        //Close Socket
-        closeSocket();
 
     }
     public void setClientName(String name)
@@ -188,32 +181,30 @@ class ClientWorker implements Runnable
             {
                 //create new clients for new user, line holds new user's name
                 SocketThrdServer.clientMaker(false);
-                SocketThrdServer.setClientName(line, SocketThrdServer.count);
+                SocketThrdServer.setClientName(line, SocketThrdServer.workers_count);
             }
 
-            //send flag "~@" to indicate duplicate ONLY IF duplicate. The rest of the message can be the same
-            if(duplicate)
+            //send flag if duplicate or not
+            line = "~@0"; // first send code indicating next line is duplicate boolean
+            write(line);
+
+            line = ""+duplicate;
+
+            //end sendMessageToUser() if duplicate
+            if(duplicate == true)
             {
-                line = "~@\nName is a duplicate of another user. Returning to main menu.\n";
-                write(line);
-                //end sendMessageToUser() if duplicate
                 return;
             }
-            else
-            {
-                line = "\nNew user profile created for recipient.\n";
-                write(line);
-            }
-           
         }
         //check if messages are full
         tempBool = checkIfInboxFull(tempInt);
-
+        //send message to user with ~@ to indicate this message is a flag
+        line = "~@2"+tempBool;
         //if messages are NOT full:
         if(tempBool == false)
-        {         
+        {
             //prompt user
-            line = "~#\nWhat message would you like to send? Limit is 80 characters: \n";
+            line = "\nWhat message would you like to send? Limit is 80 characters: \n";
             write(line);
 
             //receive message
@@ -224,28 +215,23 @@ class ClientWorker implements Runnable
             {
                 line = line.substring(0, 79);
             }
-            
+
             //put message in clients' message inbox
             insertMessage(tempInt, line);
-
-            //Send message to user saying message placed
-            line = "\nMessage sent to " + SocketThrdServer.clients.get(tempInt).clientName + "\n";
         }
 
 
         //else messages ARE full:
         else
         {
-            //send message to user with ~# to indicate this inbox is full 
             //send message to user saying messages are full
-            line = "~#\nCannot send message. Inbox full.\n";
+            line = "\nCannot send message. Inbox full.\n";
         }
 
-        write(line);
     }
 
     public void sendMessageToAllConnectedUsers()
-    {   
+    {
         //prompt user
         line = "\nWhat message would you like to send? Limit is 80 characters: \n";
         write(line);
@@ -271,10 +257,10 @@ class ClientWorker implements Runnable
                 // if messages are NOT full:
                 if(!checkIfInboxFull(index))
                 {
-                   //put message in client's message box
-                   insertMessage(index, line);
-                   //send feedback to user saying msg sent to client's name
-                   write("\nMessage sent to " + SocketThrdServer.clients.get(index).clientName + "\n");
+                    //put message in client's message box
+                    insertMessage(index, line);
+                    //send feedback to user saying msg sent to client's name
+                    write("\nMessage sent to " + SocketThrdServer.clients.get(index).clientName + "\n");
                 }
                 else
                 {
@@ -283,10 +269,10 @@ class ClientWorker implements Runnable
                 }
             }
         }
-    }        
+    }
 
     public void sendMessageToAllKnownUsers()
-    {   
+    {
         //prompt user
         line = "\nWhat message would you like to send? Limit is 80 characters: \n";
         write(line);
@@ -308,10 +294,10 @@ class ClientWorker implements Runnable
             // if messages are NOT full:
             if(!checkIfInboxFull(index))
             {
-               //put message in client's message box
-               insertMessage(index, line);
-               //send feedback to user saying msg sent to client's name
-               write("\nMessage sent to " + SocketThrdServer.clients.get(index).clientName + "\n");
+                //put message in client's message box
+                insertMessage(index, line);
+                //send feedback to user saying msg sent to client's name
+                write("\nMessage sent to " + SocketThrdServer.clients.get(index).clientName + "\n");
             }
             else
             {
@@ -319,60 +305,72 @@ class ClientWorker implements Runnable
                 write("\n" + SocketThrdServer.clients.get(index).clientName + "\'s inbox is full.\n");
             }
         }
-    }  
 
-    public void getMyMessages()
-    {
+    }
+    public void getMyMessages() {
         line = "";
-        
+
         //For loop going through user/client's messages:
-        for(int i = 0; i < 10; i++)
-        {
+        for (int i = 0; i < 10; i++) {
             //if message != "":
-            if(this.messages[i] != "")
-            {
+            if (this.messages[i] != "") {
                 line += this.messages[i];
                 line += "\n";
 
                 //clear message
                 this.messages[i] = "";
-            }     
-        }
-        if(line == "\n")    //meaning every message was empty
-        {
-            line = "\nYou have no messages.\n";
-        }
-
-        //send line to user
-        write(line);
-    }
-
-    //check if duplicate client names
-    public void checkIfDuplicateName()
-    {
-        for(int x = 0; x< SocketThrdServer.clients.size(); x++)
-        {
-            ClientWorker c = SocketThrdServer.clients.get(x);
-            if((c.clientName == this.clientName) && (c.clientID!=this.clientID))
-            {
-                if (c.connected == true)
-                {
-                    System.out.println("Error: Socket name already in use");
-                    this.closeSocket();
-                }
-                else
-                {
-                    write("~!0");
-                    write("This user already exists. Would you like to claim it? /n1) Yes /n2) No/nEnter option number indicating your choice: ");
-
-                    read();
-
-
-                }
-                //if so, send error message and do not allow another thread to handle that client
-                //if not, allow thread to handle that client and set c.connected to true
             }
         }
+
+        //check if duplicate client names
+    }
+    public void checkIfDuplicateName()
+    {
+            for( int x=0; x<SocketThrdServer.clients.size(); x++)
+            {
+                ClientWorker c = SocketThrdServer.clients.get(x);
+                if((c.clientName.equals(this.clientName)) && (c.clientID!=this.clientID))
+                {
+                    if (c.connected == true)
+                    {
+                        System.out.println("Error: Client attempted to use client name already in use");
+                        this.closeSocket();
+                    }
+                    else
+                    {
+                        write("~!0");
+                        write("This user already exists. Would you like to claim it? \n1) Yes \n2) No\nEnter option number indicating your choice: ");
+
+                        //get users response to the question
+                        read();
+                        int temp = Integer.parseInt(line.trim());
+                        if (temp==1) //user wants to claim already used username
+                        {
+                             temp =this.clientID;
+                             this.clientID = c.clientID;
+                            this.messages = c.messages;
+                            System.out.println("Client ID: "+temp+", has claimed Client ID: "+ this.clientID);
+                            write("~!0");
+                            SocketThrdServer.clients.remove(temp);
+                            SocketThrdServer.client_count--;
+                            return;
+
+                        }
+                        else if (temp==2)
+                        {
+                            this.closeSocket();
+                        }
+
+                    }
+                    //if so, send error message and do not allow another thread to handle that client
+                    //if not, allow thread to handle that client and set c.connected to true
+                }
+                else if(x == SocketThrdServer.clients.size()-1)
+                {
+                    write("Connected To Server");
+                }
+            }
+
     }
 
     //returns true if name sent as parameter is a known client name
@@ -392,7 +390,7 @@ class ClientWorker implements Runnable
         for(int i = 0; i < 10; i++)
         {
             //if any message is empty
-            if(SocketThrdServer.clients.get(ID).messages[i] == "")
+            if(SocketThrdServer.clients.get(ID).messages[i] == null)
             {
                 return false;
             }
@@ -404,7 +402,7 @@ class ClientWorker implements Runnable
         for(int i = 0; i < 10; i++)
         {
             //find first empty message slot
-            if(SocketThrdServer.clients.get(ID).messages[i] == "")
+            if(SocketThrdServer.clients.get(ID).messages[i] == null)
             {
                 //store message
                 SocketThrdServer.clients.get(ID).messages[i] = m;
@@ -415,6 +413,15 @@ class ClientWorker implements Runnable
     // read in line from client
     public void read()
     {
+        try {
+            do {
+
+            }while(!in.ready());
+        }catch(IOException in_wrong)
+        {
+            System.out.println("Error: couldn't receive, ClientWorker_BufferedReader not ready");
+        }
+
         try
         {
             //get text from client
@@ -430,17 +437,18 @@ class ClientWorker implements Runnable
     //write message to client
     public void write(String toSend)
     {
-        //send response to client
-        out.println(toSend);
+            //send response to client
+            out.println(toSend);
     }
     // close socket
     public void closeSocket()
     {
         try
         {
-            client.close();
+            write("~!9");
             this.connected=false;
             System.out.println("Client: "+this.clientName+", ID: "+this.clientID+" has been disconnected");
+            client.close();
         }
         catch (IOException e)
         {
@@ -453,7 +461,7 @@ class ClientWorker implements Runnable
 class SocketThrdServer
 {
     static ServerSocket server = null;
-    public static int count =0;
+    public static int client_count, workers_count =0;
     public static ArrayList<Thread> workers= new ArrayList<>();
     public static ArrayList<ClientWorker> clients = new ArrayList<>();
 
@@ -478,7 +486,6 @@ class SocketThrdServer
         {
             clientMaker(true);
             threadMaker();
-            count++;
         }
     }
 
@@ -487,22 +494,26 @@ class SocketThrdServer
         ClientWorker w;
         try
         {
-            w = new ClientWorker(server.accept(), count, isConnected);
+            w = new ClientWorker(server.accept(), client_count, isConnected);
             clients.add(w);
-
+            System.out.println("Client ID: "+w.clientID+" is connected");
+            client_count++;
         }
         catch (IOException e)
         {
             System.out.println("Accept failed");
             System.exit(-1);
         }
+
+
     }
 
     public void threadMaker()
     {
-        Thread t = new Thread(clients.get(count));
+        Thread t = new Thread(clients.get(workers_count));
         workers.add(t);
-        workers.get(count).start();
+        workers.get(workers_count).start();
+        workers_count++;
     }
 
 

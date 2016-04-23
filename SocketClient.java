@@ -5,10 +5,30 @@
 // 4) Present the following menu of choices to the user:
 //    a. Display the names of all known users.
 //    b. Display the names of all currently connected users.
-//    c. Send a text message to a particular user (messages can only be up to 80 chars long)
-//    d. Send a text message to all currently connected users (messages can only be up to 80 chars long)
+//    c. Send a text message to a particular user.
+// messages can only be up to 80 chars long
+//    d. Send a text message to all currently connected users.
+// messages can only be up to 80 chars long
 //    e. Send a text message to all known users.
-//    f. Get my messages and remove messages from server
+//    f. Get my messages.
+// remove messages from server
+//    g. Exit.
+// 5) Interact with the server to support the menu choices.
+// 6) Ask the user for the next choice or exit.
+//The client will:
+// 1) Accept a machine name and port number to connect to as command line arguments.
+// 2) Connect to the server.
+// 3) Prompt for and send the users name.
+// 4) Present the following menu of choices to the user:
+//    a. Display the names of all known users.
+//    b. Display the names of all currently connected users.
+//    c. Send a text message to a particular user.
+// messages can only be up to 80 chars long
+//    d. Send a text message to all currently connected users.
+// messages can only be up to 80 chars long
+//    e. Send a text message to all known users.
+//    f. Get my messages.
+// remove messages from server
 //    g. Exit.
 // 5) Interact with the server to support the menu choices.
 // 6) Ask the user for the next choice or exit.
@@ -26,61 +46,70 @@ public class SocketClient
     int temp;
     Scanner scan;
     private int systemInstruction;
+    private String line;
     /*System Instructions:
     0 - Repeated User Name indicator
     1 - Next value is required by Socket
     2 - message full indicator
     */
     public static boolean isDuplicate=false;
-    public static boolean isFull=false;
 
     public void communicate()
     {
-        scan = new Scanner(System.in);
-//        do {
-        System.out.println("Enter your name: ");
-        String name = scan.nextLine();
+            scan = new Scanner(System.in);
+            System.out.println("Enter your name: ");
+            String name = scan.nextLine();
 
-        //Send data over socket
-        sendToServer(name);
+            //Send data over socket
+            sendToServer(name);
 
-        //Receive text from server
-        receive();
-/*
+            //Receive text from server
+            receive();
+
             //Condition if there is a duplicate of this name on server
+            receive();
             if(isDuplicate)
             {
-                receive();
-                do {
-                    try
+                for(int i=0; i<3; i++)
+                {
+                    try{
+                        do{
+
+                        }while(!in.ready());
+                        System.out.println(in.readLine());
+                    }catch(IOException ex)
                     {
-                        temp = scan.nextInt();
-                        sendToServer(temp);
-                    }catch(InputMismatchException exception)
-                    {
-                        System.out.println("Invalid input");
+                        System.out.println("Client Side IO Exception at duplicate instruction read");
                     }
+
+                }
+                try{
+                    do{
+                        System.out.println("caught waiting");
+                    }while(!in.ready());
+                    System.out.print(in.readLine()+" ");
+                }catch(IOException ex)
+                {
+                    System.out.println("Client Side IO Exception at duplicate instruction read");
+                }
+
+                do {
+                        temp = scan.nextInt();
+                        System.out.println("temp input:"+temp);
+                        sendToServer(temp);
+                        System.out.println("temp was sent");
+                        receive();
 
                 }while(isDuplicate);
             }
-*/
-//        }while(!isDuplicate);
 
+        scan = new Scanner(System.in);
 
         while(true) {
             //Request User choose menu option and send to server
             pullUpMenu();
             receive();
 
-            //test
-            while(true)
-            {
-                pullUpMenu();
-            }
-
-            //endtest
-
-            //send msg to a particular user
 /*            if(temp == 3)
             {
                 try {
@@ -98,31 +127,10 @@ public class SocketClient
                     receive(); //server request for name of user
                     String str = scan.nextLine();
                     sendToServer(str);
-                    receive(); //server sends confirmation that user was created
+                    receive(); //server sends confirmation that message was sent
 
                 }
-
-                //recieve prompt to compose message. 
-                //If inbox full, boolean isFull was changed
-                receive();
-                if(isFull == false)
-                {
-                    //print prompt to compose message
-                    System.out.println("Text received: ");
-                    System.out.println(line);
-
-                    //Take input from user and send to server
-                    line = scan.nextLine();
-                    sendToServer(line);
-                }
-                else
-                {
-                    //revert boolean back
-                    isFull = false;
-                }
-                receive(); //server sends confirmation that message was sent
             }
-
             else if (temp == 4 || temp == 5)
             {
                 receive();//server requests message
@@ -150,6 +158,7 @@ public class SocketClient
             System.out.print("Enter option number indicating your choice: ");
 
             temp = scan.nextInt();
+            System.out.println("pullupMenu input was :"+temp);
         }catch(InputMismatchException exception)
         {
             System.out.println("Invalid input");
@@ -168,45 +177,49 @@ public class SocketClient
 
     public void receive()
     {
+        System.out.println("Receive was called");
+        try {
+            do {
 
-        try
+            }while(!in.ready());
+        }catch(IOException in_wrong)
         {
-            String line = in.readLine();
+            System.out.println("Error: couldn't receive, SocketClient_BufferedReader not ready");
+        }
+                try {
+                    line = in.readLine();
+                    if (line.charAt(0) == '~' && line.charAt(1) == '!') {
+                        systemInstruction = Integer.parseInt(line.substring(2).trim());
+                        switch (systemInstruction) {
+                            case 0:
+                                if(isDuplicate == false)
+                                    isDuplicate = true;
+                                else if(isDuplicate == true)
+                                    isDuplicate = false;
+                                break;
+                            case 9:
+                                closeClientSession();
+                            default:
+                                break;
+                        }
 
-            //The messagae of "~@" indicates duplicate
-            if(line.charAt(0)=='~' && line.charAt(1) == '@')
-            {
-                systemInstruction = Integer.parseInt(line.substring(2).trim());
-                switch(systemInstruction)
-                {
-                    case 0: isDuplicate = true;
-                        break;
-                    default:
-                        break;
+                    } else {
+                        System.out.println("\nServer Message: ");
+                        System.out.println(line+"\n");
+                    }
+                } catch (IOException e) {
+                    System.out.println("Read failed");
+                    System.exit(1);
                 }
-            }
-            //The message of "~#" indicates inbox is full
-            else if(line.charAt(0)=='~' && line.charAt(1) == '#'))
-            {
-               systemInstruction = Integer.parseInt(line.substring(2).trim());
-                switch(systemInstruction)
-                {
-                    case 0: isFull = true;
-                        break;
-                    default:
-                        break;
-                }
-            }
-            else {
-                System.out.println("Text received: ");
-                System.out.println(line);
-            }
-        }
-        catch (IOException e)
+    }
+
+    public static void closeClientSession()
+    {
+        if(isDuplicate)
         {
-            System.out.println("Read failed");
-            System.exit(1);
+            System.out.println("This user is already connected. Goodbye");
         }
+        System.exit(0);
     }
 
 
