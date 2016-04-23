@@ -175,6 +175,8 @@ class ClientWorker implements Runnable
         //update line to reflect user's choice
         read();
         tempInt = Integer.parseInt(line);
+        write("~!3"+index);
+        System.out.println("~!3"+index);
         //if choice is new user
         if(tempInt == index)
         {
@@ -183,9 +185,11 @@ class ClientWorker implements Runnable
 
             //check that new user's name is not a duplicate
             read();         // line now equals what the user entered
+            System.out.println("name of person to send to :"+line);
             duplicate = checkIfNameExists(line);
             if(duplicate)
             {
+                System.out.println("Got to duplicate if");
                 //send flag that it is a duplicate
                 write("~!0");
                 write("\nThat user already exists. Exiting to main menu.\n");
@@ -194,13 +198,9 @@ class ClientWorker implements Runnable
                 //end sendMessageToUser() if duplicate
                 return;
             }
-            //else if not a duplicate
-            //else
-            //{
-                //create new clients for new user, line holds new user's name
+            System.out.println("Got here ----");
                 SocketThrdServer.clientMaker(false);
-                SocketThrdServer.setClientName(line, SocketThrdServer.workers_count);
-            //}
+                SocketThrdServer.setClientName(line, SocketThrdServer.client_count);
         }
         //check if messages are full
         tempBool = checkIfInboxFull(tempInt);
@@ -403,13 +403,16 @@ class ClientWorker implements Runnable
     //returns true if name sent as parameter is a known client name
     public boolean checkIfNameExists(String name)
     {
-        for(int i = 0; i < SocketThrdServer.clients.size(); i++)
+        System.out.println("Checking if name exists for: "+name);
+        for(int i = 0; i < SocketThrdServer.client_count; i++)
         {
-            if(SocketThrdServer.clients.get(i).clientName == name)
+            if(SocketThrdServer.clients.get(i).clientName == name.trim())
             {
+                System.out.println("Name does exist");
                 return true;
             }
         }
+        System.out.println("Name does not exist");
         return false;
     }
 
@@ -427,10 +430,10 @@ class ClientWorker implements Runnable
 
     public void insertMessage(int ID, String m){
         String temp_m;
-        DateFormat form = new SimpleDateFormat("MM/dd/yy HH:mm:ss a");
+        DateFormat form = new SimpleDateFormat("MM/dd/yy hh:mm:ss a");
         Date currentDate = new Date();
-        temp_m = form.format(currentDate);
-        temp_m += " "+this.clientName+": "+m;
+        temp_m = "From: "+this.clientName+", ";
+        temp_m += form.format(currentDate)+", "+m;
         for(int i = 0; i < 10; i++)
         {
             //find first empty message slot
@@ -438,6 +441,7 @@ class ClientWorker implements Runnable
             {
                 //store message
                 SocketThrdServer.clients.get(ID).messages[i] = temp_m;
+                return;
             }
         }
     }
@@ -531,7 +535,7 @@ class SocketThrdServer
         {
             w = new ClientWorker(server.accept(), client_count, isConnected);
             clients.add(w);
-            System.out.println("Client ID: "+w.clientID+" is connected");
+            System.out.println("Client ID: "+w.clientID+" is made");
             client_count++;
         }
         catch (IOException e)
@@ -548,6 +552,7 @@ class SocketThrdServer
         Thread t = new Thread(clients.get(workers_count));
         workers.add(t);
         workers.get(workers_count).start();
+        System.out.println("Client ID: "+clients.get(workers_count).clientID+" is connected");
         workers_count++;
     }
 

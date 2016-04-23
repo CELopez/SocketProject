@@ -23,14 +23,15 @@ public class SocketClient
     Socket socket = null;
     PrintWriter out = null;
     BufferedReader in = null;
-    int temp;
+    int temp, serverInfo=0;
     Scanner scan;
     private int systemInstruction;
     private String line;
     /*System Instructions:
-    0 - Repeated User Name indicator
-    1 - Next value is required by Socket
-    2 - message full indicator
+    0 - isduplicate toggle indicator
+    1 - message full toggle indicator
+    2 - isLooping flag toggle indicator
+    3 - Next value is required by Socket
     */
     public static boolean isDuplicate, isFull, isLooping = false;
 
@@ -127,35 +128,47 @@ public class SocketClient
                 sendToServer(temp);
 
                 String str = "";
+                receive();
+                System.out.println("temp is: "+temp);
+                System.out.println("client size: "+serverInfo);
 
                 //if Other is chosen, asks for name then sends name to server
-                if(temp == SocketThrdServer.clients.size())
+                if(temp == serverInfo)
                 {
+                    System.out.println("Got here5");
+                    scan.nextLine();
                     receive(); //server request for name of user
                     str = scan.nextLine();
+                    System.out.println("str is: "+str);
                     sendToServer(str);
-
+                }
                     //Condition if there is a duplicate of this name on server OR full inbox
                     receive();      //if no duplicate nor full inbox, this is a prompt to enter msg
+                    System.out.println("Got here6");
                     if(isDuplicate)
                     {
+                        System.out.println("Got here3");
                         receive(); //recieve message "Exiting to main menu"
                     }
                     else if(!isFull)
                     {
                         //recieve msg from user and send to server
+                        scan.nextLine();
                         str = scan.nextLine();
+                        System.out.println("str = "+str);
                         sendToServer(str);
                     }//else there is NOT a duplicate but messages ARE full
                     else
                     {
                         //receive message of inbox being full
+                        System.out.println("Got here1");
                         receive();
                     }
-                }
+
 
 
                 //toggle of either isDuplicate or isFull OR confirmation of msg being sent
+                System.out.println("Got here2");
                 receive();
             }
             else if (temp == 4 || temp == 5)
@@ -235,7 +248,7 @@ public class SocketClient
             if (line.charAt(0) == '~' && line.charAt(1) == '!')
             {
                 //set systemInstruction equal to what comes after flag ~!
-                systemInstruction = Integer.parseInt(line.substring(2).trim());
+                systemInstruction = Integer.parseInt(""+line.charAt(2));
                 switch (systemInstruction) {
                     //toggle isDuplicate
                     case 0:
@@ -259,6 +272,9 @@ public class SocketClient
                             isLooping = true;
                         else if(isLooping == true)
                             isLooping = false;
+                        break;
+                    case 3:
+                            serverInfo = Integer.parseInt(line.substring(3));
                         break;
                     case 9:
                         closeClientSession();
@@ -304,12 +320,14 @@ public class SocketClient
                     System.out.println("Error: couldn't receive, SocketClient_BufferedReader not ready");
                 }
             }
+
+            System.out.println("Received from server: "+line);
       //  System.out.println("Line is " + line);
         if (line.charAt(0) == '~' && line.charAt(1) == '!') 
         {
            // System.out.println("Checkpoint 2 in receive, flag found");
             //set systemInstruction equal to what comes after flag ~!
-            systemInstruction = Integer.parseInt(line.substring(2).trim());
+            systemInstruction = Integer.parseInt(""+line.charAt(2));
             switch (systemInstruction) {
                 //toggle isDuplicate
                 case 0:
@@ -333,6 +351,10 @@ public class SocketClient
                         isLooping = true;
                     else if(isLooping == true)
                         isLooping = false;
+                    break;
+                case 3:
+                    serverInfo = Integer.parseInt(line.substring(3));
+                    System.out.println("serverInfo set to "+serverInfo);
                     break;
                 case 9:
                     closeClientSession();
