@@ -104,6 +104,14 @@ public class SocketClient
             }
 
             receive();
+            if(temp == 1 || temp == 2 || temp == 6)
+            {
+                do
+                {
+                    //receive list until no more lines are provided
+                    receive();
+                }while(isLooping);
+            }
 
             if(temp == 3)
             {
@@ -211,47 +219,66 @@ public class SocketClient
 
         System.out.println("Checkpoint 1 in receive");
 
-        try {
+        try 
+        {
             line = in.readLine();
-            System.out.println("Line is " + line);
-            if (line.charAt(0) == '~' && line.charAt(1) == '!') 
+            while(line == null)
             {
-                System.out.println("Checkpoint 2 in receive, flag found");
-                //set systemInstruction equal to what comes after flag ~!
-                systemInstruction = Integer.parseInt(line.substring(2).trim());
-                switch (systemInstruction) {
-                    //toggle isDuplicate
-                    case 0:
-                        System.out.println("Checkpoint 2 in receive, in case 0");
-                        if(isDuplicate == false)
-                            isDuplicate = true;
-                        else if(isDuplicate == true)
-                            isDuplicate = false;
-                        break;
-                    //toggle isFull
-                    case 1:
-                        System.out.println("Checkpoint 3 in receive, in case 1");
-                        if(isFull == false)
-                            isFull = true;
-                        else if(isFull == true)
-                            isFull = false;
-                    //toggle isLooping
-                    case 2:
-                    System.out.println("Checkpoint 3 in receive, in case 2");
-                        if(isLooping == false)
-                            isLooping = true;
-                        else if(isLooping == true)
-                            isLooping = false;
-                    case 9:
-                        closeClientSession();
-                    default:
-                        break;
-                }
+                try
+                {
+                    do{
 
-            } else {
-                System.out.println("\nServer Message: ");
-                System.out.println(line+"\n");
+                    }while(!in.ready());
+                    in.readLine();
+                }catch(IOException ex)
+                {
+                    System.out.println("Client Side IO Exception at duplicate instruction read");
+                }
             }
+
+        }catch(IOException ex)
+                {
+                    System.out.println("Client Side IO Exception at duplicate instruction read");
+                }
+        System.out.println("Line is " + line);
+        if (line.charAt(0) == '~' && line.charAt(1) == '!') 
+        {
+            System.out.println("Checkpoint 2 in receive, flag found");
+            //set systemInstruction equal to what comes after flag ~!
+            systemInstruction = Integer.parseInt(line.substring(2).trim());
+            switch (systemInstruction) {
+                //toggle isDuplicate
+                case 0:
+                    System.out.println("Checkpoint 2 in receive, in case 0");
+                    if(isDuplicate == false)
+                        isDuplicate = true;
+                    else if(isDuplicate == true)
+                        isDuplicate = false;
+                    break;
+                //toggle isFull
+                case 1:
+                    System.out.println("Checkpoint 3 in receive, in case 1");
+                    if(isFull == false)
+                        isFull = true;
+                    else if(isFull == true)
+                        isFull = false;
+                //toggle isLooping
+                case 2:
+                System.out.println("Checkpoint 3 in receive, in case 2");
+                    if(isLooping == false)
+                        isLooping = true;
+                    else if(isLooping == true)
+                        isLooping = false;
+                case 9:
+                    closeClientSession();
+                default:
+                    break;
+            }
+
+        } else {
+            System.out.println("\nServer Message: ");
+            System.out.println(line+"\n");
+        }
         } catch (IOException e) {
             System.out.println("Read failed");
             System.exit(1);
