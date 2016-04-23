@@ -123,6 +123,7 @@ class ClientWorker implements Runnable
             write(line);
             index++;
         }
+        write("\n");
         //toggle isLooping off
         write("~!2");
     }
@@ -156,6 +157,7 @@ class ClientWorker implements Runnable
         index = 0;
         loopMax = SocketThrdServer.clients.size();
         while(index < loopMax){
+            System.out.println("index: "+index+" , loopMax: "+loopMax);
             line = "\n";
             line += "" + index + ") ";
             line += SocketThrdServer.clients.get(index).clientName;
@@ -163,9 +165,10 @@ class ClientWorker implements Runnable
             index++;
         }
         //add option to send message to unknown user
-        line += "\n";
+        line = "\n";
         line += "" + index + ") Other User";
-        write(line);        
+        write(line);
+        write("User choice: ");
         //toggle isLooping off
         write("~!2");
 
@@ -181,10 +184,10 @@ class ClientWorker implements Runnable
             //check that new user's name is not a duplicate
             read();         // line now equals what the user entered
             duplicate = checkIfNameExists(line);
-            if(duplicate == true)
+            if(duplicate)
             {
                 //send flag that it is a duplicate
-                write("~@0");
+                write("~!0");
                 write("\nThat user already exists. Exiting to main menu.\n");
                 //toggle duplicate on client side
                 write("~!0");
@@ -203,7 +206,7 @@ class ClientWorker implements Runnable
         tempBool = checkIfInboxFull(tempInt);
 
         //if messages are NOT full:
-        if(tempBool == false)
+        if(!tempBool)
         {
             //prompt user
             write("\nWhat message would you like to send? Limit is 80 characters: \n");
@@ -467,7 +470,7 @@ class ClientWorker implements Runnable
     public void write(String toSend)
     {
             System.out.println("Write has been called");
-            System.out.println("Line is " + line);
+     //       System.out.println("Line is " + line);
             System.out.println("toSend is " + toSend);
             //send response to client
             out.println(toSend);
