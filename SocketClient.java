@@ -229,17 +229,14 @@ public class SocketClient
                     do{
 
                     }while(!in.ready());
-                    in.readLine();
+                    line = in.readLine();
                 }catch(IOException ex)
                 {
                     System.out.println("Client Side IO Exception at duplicate instruction read");
                 }
             }
 
-        }catch(IOException ex)
-                {
-                    System.out.println("Client Side IO Exception at duplicate instruction read");
-                }
+
         System.out.println("Line is " + line);
         if (line.charAt(0) == '~' && line.charAt(1) == '!') 
         {
