@@ -67,9 +67,6 @@ class ClientWorker implements Runnable
             //check if name is a duplicate/already in use by a client
             checkIfDuplicateName();
 
-
-
-
             do
             {
                 read();
@@ -108,8 +105,6 @@ class ClientWorker implements Runnable
     {
         this.clientName = name;
     }
-
-    //Start of client's menu options
 
     public void displayAllKnownUsers()
     {
@@ -177,29 +172,27 @@ class ClientWorker implements Runnable
             //check that new user's name is not a duplicate
             read();         // line now equals what the user entered
             duplicate = checkIfNameExists(line);
-            if(duplicate == false)
+            if(duplicate == true)
             {
+                //send flag that it is a duplicate
+                write("~@0");
+                write("\nThat user already exists. Exiting to main menu.\n");
+                //toggle duplicate on client side
+                write("~!0");
+                //end sendMessageToUser() if duplicate
+                return;
+            }
+            //else if not a duplicate
+            //else
+            //{
                 //create new clients for new user, line holds new user's name
                 SocketThrdServer.clientMaker(false);
                 SocketThrdServer.setClientName(line, SocketThrdServer.workers_count);
-            }
-
-            //send flag if duplicate or not
-            line = "~@0"; // first send code indicating next line is duplicate boolean
-            write(line);
-
-            line = ""+duplicate;
-
-            //end sendMessageToUser() if duplicate
-            if(duplicate == true)
-            {
-                return;
-            }
+            //}
         }
         //check if messages are full
         tempBool = checkIfInboxFull(tempInt);
-        //send message to user with ~@ to indicate this message is a flag
-        line = "~@2"+tempBool;
+
         //if messages are NOT full:
         if(tempBool == false)
         {
@@ -220,12 +213,15 @@ class ClientWorker implements Runnable
             insertMessage(tempInt, line);
         }
 
-
         //else messages ARE full:
         else
         {
+            //tell user messages are full
+            write("~!1");
             //send message to user saying messages are full
-            line = "\nCannot send message. Inbox full.\n";
+            write("\nCannot send message. Inbox full.\n");
+            //toggle isFull on client side
+            write("~!1");
         }
 
     }
@@ -346,8 +342,8 @@ class ClientWorker implements Runnable
                         int temp = Integer.parseInt(line.trim());
                         if (temp==1) //user wants to claim already used username
                         {
-                             temp =this.clientID;
-                             this.clientID = c.clientID;
+                            temp =this.clientID;
+                            this.clientID = c.clientID;
                             this.messages = c.messages;
                             System.out.println("Client ID: "+temp+", has claimed Client ID: "+ this.clientID);
                             write("~!0");
