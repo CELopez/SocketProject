@@ -112,33 +112,36 @@ class ClientWorker implements Runnable
         //Go through array of ClientWorkers up until count of ClientWorkers
         //append name to mega-message of known usernames
         //each username has a newline before the name to format the message.
+        write("~!2");
         index = 0;
         loopMax = SocketThrdServer.clients.size();
-        line = "";
         while(index < loopMax){
-            line += "\n";
+            line = "\n";
             line += "" + index + ") ";
             line += SocketThrdServer.clients.get(index).clientName;
+            write(line);
             index++;
         }
-        write(line);
+        //toggle isLooping off
+        write("~!2");
     }
 
     public void displayNamesOfConnectedUsers()
     {
+        write("~!2");
         index = 0;
         loopMax = SocketThrdServer.clients.size();
-        line = "";
         while(index < loopMax){
             //check if client at index is connected, if so add name to message
-            if(SocketThrdServer.clients.get(index).connected == true){
-                line += "\n";
+            if(SocketThrdServer.clients.get(index).connected){
+                line = "\n";
                 line += "" + index + ") ";
                 line += SocketThrdServer.clients.get(index).clientName;
+                write(line);
             }//end if
+            index++;
         }//end while loop
-        index++;
-        write(line);
+        write("~!2");
     }
 
     public void sendMessageToUser()
@@ -310,27 +313,32 @@ class ClientWorker implements Runnable
         write("~!2");
 
     }
-    public void getMyMessages() {
+    public void getMyMessages() 
+    {
+        //toggle isLooping on
+        write("~!2");
         line = "";
-
         //For loop going through user/client's messages:
         for (int i = 0; i < 10; i++) {
             //if message exists:
-            if (this.messages[i] != "") 
+            if (this.messages[i] != null) 
             {
+                //send message
+                line = "\n";
                 line += this.messages[i];
-                line += "\n";
+                write(line);
 
                 //clear message
-                this.messages[i] = "";
+                this.messages[i] = null;
             }
         }
-        if(line == "\n")    //meaning every message was empty
+        if(line == "")    //meaning every message was empty
         {
             line = "\nYou have no messages.\n";
+            write(line);
         }
-
-        write(line);
+        //toggle isLooping off
+        write("~!2");
     }
 
     //check if duplicate client names
