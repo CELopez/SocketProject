@@ -89,17 +89,20 @@ public class SocketClient
             //Request User choose menu option and send to server
             pullUpMenu();
 
-            //skip a line of bad buffer
-            try{
-                do{
-
-                }while(!in.ready());
-                System.out.println(in.readLine());
-            }catch(IOException ex)
+            if(temp != 7)
             {
-                System.out.println("Client Side IO Exception at duplicate instruction read");
+                //skip a line of bad buffer
+                try{
+                    do{
+
+                    }while(!in.ready());
+                    System.out.println(in.readLine());
+                }catch(IOException ex)
+                {
+                    System.out.println("Client Side IO Exception at duplicate instruction read");
+                }
             }
-            
+
             receive();
 
             if(temp == 3)
