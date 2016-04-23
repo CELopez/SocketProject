@@ -88,7 +88,7 @@ public class SocketClient
         while(true) {
             //Request User choose menu option and send to server
             pullUpMenu();
-
+/*
             if(temp != 7)
             {
                 //skip a line of bad buffer
@@ -102,14 +102,15 @@ public class SocketClient
                     System.out.println("Client Side IO Exception at duplicate instruction read");
                 }
             }
-
+*/
             receive();
             if(temp == 1 || temp == 2 || temp == 6)
             {
+                receive();
                 do
                 {
                     //receive list until no more lines are provided
-                    receive();
+                    receiveMultiLines();
                 }while(isLooping);
             }
 
@@ -204,6 +205,75 @@ public class SocketClient
     {
         out.println(str);
     }
+    public void receiveMultiLines()
+    {
+        try {
+            do {
+
+            }while(!in.ready());
+        }catch(IOException in_wrong)
+        {
+            System.out.println("Error: couldn't receive, SocketClient_BufferedReader not ready");
+        }
+        try
+        {
+            line = in.readLine();
+            while(line.length()==0)
+            {
+                try {
+                    do {
+
+                    }while(!in.ready());
+                    line = in.readLine();
+                }catch(IOException in_wrong)
+                {
+                    System.out.println("Error: couldn't receive, SocketClient_BufferedReader not ready");
+                }
+            }
+
+            if (line.charAt(0) == '~' && line.charAt(1) == '!')
+            {
+                //set systemInstruction equal to what comes after flag ~!
+                systemInstruction = Integer.parseInt(line.substring(2).trim());
+                switch (systemInstruction) {
+                    //toggle isDuplicate
+                    case 0:
+                        System.out.println("Checkpoint 2 in receive, in case 0");
+                        if(isDuplicate == false)
+                            isDuplicate = true;
+                        else if(isDuplicate == true)
+                            isDuplicate = false;
+                        break;
+                    //toggle isFull
+                    case 1:
+                        System.out.println("Checkpoint 3 in receive, in case 1");
+                        if(isFull == false)
+                            isFull = true;
+                        else if(isFull == true)
+                            isFull = false;
+                        //toggle isLooping
+                    case 2:
+                        System.out.println("Checkpoint 3 in receive, in case 2");
+                        if(isLooping == false)
+                            isLooping = true;
+                        else if(isLooping == true)
+                            isLooping = false;
+                        break;
+                    case 9:
+                        closeClientSession();
+                    default:
+                        break;
+                }
+
+            } else {
+                System.out.println(line);
+            }
+        } catch (IOException e) {
+            System.out.println("Read failed");
+            System.exit(1);
+        }
+
+    }
 
     public void receive()
     {
@@ -218,25 +288,21 @@ public class SocketClient
         }
 
         System.out.println("Checkpoint 1 in receive");
-
         try 
         {
             line = in.readLine();
-            while(line == null)
+            while(line.length()==0)
             {
-                try
-                {
-                    do{
+                try {
+                    do {
 
                     }while(!in.ready());
                     line = in.readLine();
-                }catch(IOException ex)
+                }catch(IOException in_wrong)
                 {
-                    System.out.println("Client Side IO Exception at duplicate instruction read");
+                    System.out.println("Error: couldn't receive, SocketClient_BufferedReader not ready");
                 }
             }
-
-
         System.out.println("Line is " + line);
         if (line.charAt(0) == '~' && line.charAt(1) == '!') 
         {
@@ -266,6 +332,7 @@ public class SocketClient
                         isLooping = true;
                     else if(isLooping == true)
                         isLooping = false;
+                    break;
                 case 9:
                     closeClientSession();
                 default:
@@ -274,7 +341,7 @@ public class SocketClient
 
         } else {
             System.out.println("\nServer Message: ");
-            System.out.println(line+"\n");
+            System.out.println(line);
         }
         } catch (IOException e) {
             System.out.println("Read failed");

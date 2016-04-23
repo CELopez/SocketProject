@@ -22,8 +22,9 @@
 
 import java.io.*;
 import java.net.*;
-import java.util.ArrayList;
-import java.util.concurrent.Semaphore;
+import java.text.SimpleDateFormat;
+import java.util.*;
+import java.text.DateFormat;
 
 class ClientWorker implements Runnable
 {
@@ -147,7 +148,6 @@ class ClientWorker implements Runnable
     public void sendMessageToUser()
     {
         duplicate = false;
-
         //compile list of users to send to user
         index = 0;
         loopMax = SocketThrdServer.clients.size();
@@ -417,13 +417,18 @@ class ClientWorker implements Runnable
     }
 
     public void insertMessage(int ID, String m){
+        String temp_m;
+        DateFormat form = new SimpleDateFormat("MM/dd/yy HH:mm:ss a");
+        Date currentDate = new Date();
+        temp_m = form.format(currentDate);
+        temp_m += " "+this.clientName+": "+m;
         for(int i = 0; i < 10; i++)
         {
             //find first empty message slot
             if(SocketThrdServer.clients.get(ID).messages[i] == null)
             {
                 //store message
-                SocketThrdServer.clients.get(ID).messages[i] = m;
+                SocketThrdServer.clients.get(ID).messages[i] = temp_m;
             }
         }
     }
