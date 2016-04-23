@@ -116,7 +116,7 @@ class ClientWorker implements Runnable
         loopMax = SocketThrdServer.clients.size();
         line = "";
         while(index < loopMax){
-            line += "/n";
+            line += "\n";
             line += "" + index + ") ";
             line += SocketThrdServer.clients.get(index).clientName;
             index++;
@@ -132,7 +132,7 @@ class ClientWorker implements Runnable
         while(index < loopMax){
             //check if client at index is connected, if so add name to message
             if(SocketThrdServer.clients.get(index).connected == true){
-                line += "/n";
+                line += "\n";
                 line += "" + index + ") ";
                 line += SocketThrdServer.clients.get(index).clientName;
             }//end if
@@ -148,15 +148,15 @@ class ClientWorker implements Runnable
         //compile list of users to send to user
         index = 0;
         loopMax = SocketThrdServer.clients.size();
-        line = "";
+        line = "\nChoose a user to send message to:";
         while(index < loopMax){
-            line += "/n";
+            line += "\n";
             line += "" + index + ") ";
             line += SocketThrdServer.clients.get(index).clientName;
             index++;
         }
         //add option to send message to unknown user
-        line += "/n";
+        line += "\n";
         line += "" + index + ") Other User";
         write(line);
 
@@ -229,8 +229,7 @@ class ClientWorker implements Runnable
     public void sendMessageToAllConnectedUsers()
     {
         //prompt user
-        line = "\nWhat message would you like to send? Limit is 80 characters: \n";
-        write(line);
+        write("\nWhat message would you like to send? Limit is 80 characters: \n");
 
         //receive message
         read();
@@ -245,6 +244,8 @@ class ClientWorker implements Runnable
         //loop going through all clients:
         index = 0;
         loopMax = SocketThrdServer.clients.size();
+        //send isLooping flag
+        write("~!2");
         while(index < loopMax)
         {
             //if connected:
@@ -265,6 +266,8 @@ class ClientWorker implements Runnable
                 }
             }
         }
+        //toggle isLooping
+        write("~!2");
     }
 
     public void sendMessageToAllKnownUsers()
@@ -285,6 +288,8 @@ class ClientWorker implements Runnable
         //loop going through all clients:
         index = 0;
         loopMax = SocketThrdServer.clients.size();
+        //send isLooping flag
+        write("~!2");
         while(index < loopMax)
         {
             // if messages are NOT full:
@@ -301,6 +306,8 @@ class ClientWorker implements Runnable
                 write("\n" + SocketThrdServer.clients.get(index).clientName + "\'s inbox is full.\n");
             }
         }
+        //toggle isLooping
+        write("~!2");
 
     }
     public void getMyMessages() {
@@ -308,8 +315,9 @@ class ClientWorker implements Runnable
 
         //For loop going through user/client's messages:
         for (int i = 0; i < 10; i++) {
-            //if message != "":
-            if (this.messages[i] != "") {
+            //if message exists:
+            if (this.messages[i] != "") 
+            {
                 line += this.messages[i];
                 line += "\n";
 
@@ -317,9 +325,15 @@ class ClientWorker implements Runnable
                 this.messages[i] = "";
             }
         }
+        if(line == "\n")    //meaning every message was empty
+        {
+            line = "\nYou have no messages.\n";
+        }
 
-        //check if duplicate client names
+        write(line);
     }
+
+    //check if duplicate client names
     public void checkIfDuplicateName()
     {
             for( int x=0; x<SocketThrdServer.clients.size(); x++)
@@ -433,6 +447,9 @@ class ClientWorker implements Runnable
     //write message to client
     public void write(String toSend)
     {
+            System.out.println("Write has been called");
+            System.out.println("Line is " + line);
+            System.out.println("toSend is " + toSend);
             //send response to client
             out.println(toSend);
     }
