@@ -384,6 +384,7 @@ class ClientWorker implements Runnable
                             this.messages = c.messages;
                             System.out.println("Client ID: "+temp+", has claimed Client ID: "+ this.clientID);
                             write("~!0");
+                            //remove old client
                             SocketThrdServer.clients.remove(temp);
                             SocketThrdServer.client_count--;
                             return;
@@ -511,8 +512,7 @@ class SocketThrdServer
     public static int client_count, workers_count =0;
     public static ArrayList<Thread> workers= new ArrayList<>();
     public static ArrayList<ClientWorker> clients = new ArrayList<>();
-
-
+    
     public void listenSocket(int port)
     {
         try
