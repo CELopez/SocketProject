@@ -152,7 +152,7 @@ public class SocketClient
                     else if(!isFull)
                     {
                         //recieve msg from user and send to server
-                        scan.nextLine();
+                        //scan.nextLine();
                         str = scan.nextLine();
                         System.out.println("str = "+str);
                         sendToServer(str);
