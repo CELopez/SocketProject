@@ -129,7 +129,9 @@ public class SocketClient
                     else if(!isFull)
                     {
                         //recieve msg from user and send to server
+                        if(temp!=serverInfo)
                         scan.nextLine();
+
                         str = scan.nextLine();
                         sendToServer(str);
                     }//else there is NOT a duplicate but messages ARE full
