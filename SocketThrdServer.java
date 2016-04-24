@@ -157,7 +157,6 @@ class ClientWorker implements Runnable
         index = 0;
         loopMax = SocketThrdServer.clients.size();
         while(index < loopMax){
-            System.out.println("index: "+index+" , loopMax: "+loopMax);
             line = "\n";
             line += "" + index + ") ";
             line += SocketThrdServer.clients.get(index).clientName;
@@ -176,7 +175,6 @@ class ClientWorker implements Runnable
         read();
         tempInt = Integer.parseInt(line);
         write("~!3"+index);
-        System.out.println("~!3"+index);
         //if choice is new user
         if(tempInt == index)
         {
@@ -185,13 +183,9 @@ class ClientWorker implements Runnable
 
             //check that new user's name is not a duplicate
             read();         // line now equals what the user entered
-            System.out.println("name of person to send to :"+line);
             duplicate = checkIfNameExists(line);
-            System.out.println("Got past duplicate");
-            System.out.println(duplicate);
             if(duplicate)
             {
-                System.out.println("Got to duplicate if");
                 //send flag that it is a duplicate
                 write("~!0");
                 write("\nThat user already exists. Exiting to main menu.\n");
@@ -204,11 +198,9 @@ class ClientWorker implements Runnable
             SocketThrdServer.newUser(false, line);
 
         }
-        System.out.println("About to check");
         //check if messages are full
         tempBool = checkIfInboxFull(tempInt);
 
-        System.out.println("Checked inbox if full, tempBool: "+tempBool);
         //if messages are NOT full:
         if(!tempBool)
         {
@@ -409,16 +401,13 @@ class ClientWorker implements Runnable
     //returns true if name sent as parameter is a known client name
     public boolean checkIfNameExists(String name)
     {
-        System.out.println("Checking if name exists for: "+name);
         for(int i = 0; i < SocketThrdServer.client_count; i++)
         {
             if(SocketThrdServer.clients.get(i).clientName == name.trim())
             {
-                System.out.println("Name does exist");
                 return true;
             }
         }
-        System.out.println("Name does not exist");
         return false;
     }
 
@@ -428,11 +417,9 @@ class ClientWorker implements Runnable
             //if any message is empty
             if(SocketThrdServer.clients.get(ID).messages[i] == null)
             {
-                System.out.println("Inbox was not full");
                 return false;
             }
         }
-        System.out.println("Inbox was full");
         return true;
     }
 
@@ -481,9 +468,6 @@ class ClientWorker implements Runnable
     //write message to client
     public void write(String toSend)
     {
-            System.out.println("Write has been called");
-     //       System.out.println("Line is " + line);
-            System.out.println("toSend is " + toSend);
             //send response to client
             out.println(toSend);
     }
@@ -537,13 +521,10 @@ class SocketThrdServer
 
     public static void clientMaker(boolean isConnected)
     {
-        System.out.println("Started making client");
-        System.out.println("client count:"+SocketThrdServer.client_count);
         ClientWorker w;
         try
         {
             w = new ClientWorker(server.accept(), SocketThrdServer.client_count, isConnected);
-            System.out.println("Got here ~~~~~~~~~");
             SocketThrdServer.clients.add(w);
             System.out.println("Client ID: "+w.clientID+" is made");
             SocketThrdServer.client_count++;
@@ -554,22 +535,16 @@ class SocketThrdServer
             System.exit(-1);
         }
 
-        System.out.println("finished making client");
     }
 
     public static void newUser(boolean isConnected, String name)
     {
-        System.out.println("Started adding unknown user");
         
         ClientWorker w = new ClientWorker(null, SocketThrdServer.client_count, isConnected);
-        System.out.println("Got here ~~~~~~~~~");
         w.setClientName(name);
         SocketThrdServer.clients.add(w);
         System.out.println("Client ID: "+w.clientID+" is made");
         SocketThrdServer.client_count++;
-    
-
-        System.out.println("finished adding unknown user");
     }
 
     public void threadMaker()
