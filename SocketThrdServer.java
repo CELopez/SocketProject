@@ -105,7 +105,7 @@ class ClientWorker implements Runnable
     }
     public void setClientName(String name)
     {
-        this.clientName = name;
+        clientName = name;
     }
 
     public void displayAllKnownUsers()
@@ -187,6 +187,8 @@ class ClientWorker implements Runnable
             read();         // line now equals what the user entered
             System.out.println("name of person to send to :"+line);
             duplicate = checkIfNameExists(line);
+            System.out.println("Got past duplicate");
+            System.out.println(duplicate);
             if(duplicate)
             {
                 System.out.println("Got to duplicate if");
@@ -198,13 +200,16 @@ class ClientWorker implements Runnable
                 //end sendMessageToUser() if duplicate
                 return;
             }
-            System.out.println("Got here ----");
-                SocketThrdServer.clientMaker(false);
-                SocketThrdServer.setClientName(line, SocketThrdServer.client_count);
+            // make new client
+            SocketThrdServer.clientMaker(false);
+            SocketThrdServer.setClientName(line, SocketThrdServer.clients.size());
+
         }
+        System.out.println("About to check");
         //check if messages are full
         tempBool = checkIfInboxFull(tempInt);
 
+        System.out.println("Checked inbox if full, tempBool: "+tempBool);
         //if messages are NOT full:
         if(!tempBool)
         {
@@ -224,7 +229,6 @@ class ClientWorker implements Runnable
             insertMessage(tempInt, line);
             write("\nMessage has been sent.\n");
         }
-
         //else messages ARE full:
         else
         {
@@ -277,6 +281,7 @@ class ClientWorker implements Runnable
                     write("\n" + SocketThrdServer.clients.get(index).clientName + "\'s inbox is full.\n");
                 }
             }
+            index++;
         }
         //toggle isLooping
         write("~!2");
@@ -317,6 +322,7 @@ class ClientWorker implements Runnable
                 //send feedback to user saying client's name's inbox is full
                 write("\n" + SocketThrdServer.clients.get(index).clientName + "\'s inbox is full.\n");
             }
+            index++;
         }
         //toggle isLooping
         write("~!2");
@@ -422,9 +428,11 @@ class ClientWorker implements Runnable
             //if any message is empty
             if(SocketThrdServer.clients.get(ID).messages[i] == null)
             {
+                System.out.println("Inbox was not full");
                 return false;
             }
         }
+        System.out.println("Inbox was full");
         return true;
     }
 
@@ -530,13 +538,16 @@ class SocketThrdServer
 
     public static void clientMaker(boolean isConnected)
     {
+        System.out.println("Started making client");
+        System.out.println("client count:"+SocketThrdServer.client_count);
         ClientWorker w;
         try
         {
-            w = new ClientWorker(server.accept(), client_count, isConnected);
-            clients.add(w);
+            w = new ClientWorker(server.accept(), SocketThrdServer.client_count, isConnected);
+            System.out.println("Got here ~~~~~~~~~");
+            SocketThrdServer.clients.add(w);
             System.out.println("Client ID: "+w.clientID+" is made");
-            client_count++;
+            SocketThrdServer.client_count++;
         }
         catch (IOException e)
         {
@@ -544,7 +555,7 @@ class SocketThrdServer
             System.exit(-1);
         }
 
-
+        System.out.println("finished making client");
     }
 
     public void threadMaker()
@@ -584,6 +595,7 @@ class SocketThrdServer
     }
     public static void setClientName(String name, int position)
     {
+
         clients.get(position).setClientName(name);
 
     }

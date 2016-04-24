@@ -66,7 +66,6 @@ public class SocketClient
                 }
                 try{
                     do{
-                      //  System.out.println("caught waiting");
                     }while(!in.ready());
                     System.out.print(in.readLine()+" ");
                 }catch(IOException ex)
@@ -174,6 +173,7 @@ public class SocketClient
             else if (temp == 4 || temp == 5)
             {   
                 //server already requested message, user composes and sends message
+                scan.nextLine();
                 String str = scan.nextLine();
                 sendToServer(str);
                 receive();  //receive isLooping flag
@@ -297,7 +297,7 @@ public class SocketClient
         System.out.println("Receive was called");
         try {
             do {
-
+             //   System.out.println("Caught here 1");
             }while(!in.ready());
         }catch(IOException in_wrong)
         {
@@ -308,11 +308,11 @@ public class SocketClient
         try 
         {
             line = in.readLine();
-            while(line.length()==0)
+            while(line.length()==0 || line == null || line =="")
             {
                 try {
                     do {
-
+                    //    System.out.println("Caught here 2");
                     }while(!in.ready());
                     line = in.readLine();
                 }catch(IOException in_wrong)
