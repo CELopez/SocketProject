@@ -201,7 +201,7 @@ class ClientWorker implements Runnable
                 return;
             }
             // make new client
-            SocketThrdServer.clientMaker(false);
+            SocketThrdServer.newUser(false);
             SocketThrdServer.setClientName(line, SocketThrdServer.clients.size());
 
         }
@@ -556,6 +556,20 @@ class SocketThrdServer
         }
 
         System.out.println("finished making client");
+    }
+
+    public static void newUser(boolean isConnected)
+    {
+        System.out.println("Started adding unknown user");
+        
+        ClientWorker w = new ClientWorker(null, SocketThrdServer.client_count, isConnected);
+        System.out.println("Got here ~~~~~~~~~");
+        SocketThrdServer.clients.add(w);
+        System.out.println("Client ID: "+w.clientID+" is made");
+        SocketThrdServer.client_count++;
+    
+
+        System.out.println("finished adding unknown user");
     }
 
     public void threadMaker()
